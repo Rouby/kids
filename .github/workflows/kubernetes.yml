@@ -61,6 +61,8 @@ jobs:
     name: Deploy to Kubernetes
     needs: build
     runs-on: arc-runner-set-kids
+    container:
+      image: ubuntu:22.04
     environment:
       name: production
       url: https://kids.aiacta.com
