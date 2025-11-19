@@ -60,7 +60,7 @@ jobs:
   deploy:
     name: Deploy to Kubernetes
     needs: build
-    runs-on: self-hosted
+    runs-on: arc-runner-set-kids
     environment:
       name: production
       url: https://kids.aiacta.com

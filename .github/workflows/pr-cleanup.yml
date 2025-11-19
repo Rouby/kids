@@ -13,7 +13,7 @@ permissions:
 jobs:
   cleanup:
     name: Cleanup Review App
-    runs-on: self-hosted
+    runs-on: arc-runner-set-kids
     steps:
       - name: 🔧 Install Helm
         run: |
