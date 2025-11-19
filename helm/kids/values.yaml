@@ -24,7 +24,7 @@ ingress:
   enabled: true
   className: "traefik"
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:
     - host: kids.aiacta.com
       paths:
