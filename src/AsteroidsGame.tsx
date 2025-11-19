@@ -1,9 +1,10 @@
 import { randomId } from '@mantine/hooks';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
 import { RefObject, createRef, useEffect, useState } from 'react';
 
 export function AsteroidsGame() {
   const [score, setScore] = useState(0);
+  const [collectedStarPosition, setCollectedStarPosition] = useState<{ x: number; y: number } | null>(null);
 
   const [planets, setPlanets] = useState<
     { id: string; ref: RefObject<HTMLDivElement>; initialX: number }[]
@@ -87,6 +88,11 @@ export function AsteroidsGame() {
           coinRect.top < rocketRect.bottom &&
           coinRect.bottom > rocketRect.top
         ) {
+          // Set the position for the collection animation
+          setCollectedStarPosition({
+            x: coinRect.left + coinRect.width / 2,
+            y: coinRect.top + coinRect.height / 2,
+          });
           setCoins((coins) => coins.filter((c) => c.id !== coin.id));
           setScore((score) => score + 1);
         }
@@ -100,19 +106,101 @@ export function AsteroidsGame() {
     <>
       <Background />
 
+      {/* Score display with star icons */}
       <div
         style={{
           position: 'absolute',
           top: '5vh',
           left: 0,
           right: 0,
-          textAlign: 'center',
-          fontSize: 40,
-          color: 'yellow',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '15px',
+          flexWrap: 'wrap',
+          padding: '0 20px',
+          zIndex: 100,
         }}
       >
-        {score}
+        {/* Display collected stars */}
+        {Array.from({ length: Math.min(score, 20) }).map((_, i) => (
+          <motion.img
+            key={i}
+            src="/star.svg"
+            alt="Collected star"
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ 
+              type: 'spring', 
+              stiffness: 300, 
+              damping: 15,
+              delay: i * 0.05 
+            }}
+            style={{ 
+              width: 40, 
+              height: 40,
+              filter: 'drop-shadow(0 0 10px rgba(255, 255, 0, 0.8))'
+            }}
+          />
+        ))}
+        
+        {/* Score number */}
+        <motion.div
+          key={score}
+          initial={{ scale: 1.5, opacity: 0.5 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+          style={{
+            fontSize: 50,
+            fontWeight: 'bold',
+            color: 'yellow',
+            textShadow: '0 0 20px rgba(255, 255, 0, 0.8), 0 0 40px rgba(255, 255, 0, 0.5)',
+            minWidth: 60,
+            textAlign: 'center',
+          }}
+        >
+          {score}
+        </motion.div>
       </div>
+
+      {/* Collection animation */}
+      <AnimatePresence>
+        {collectedStarPosition && (
+          <motion.img
+            src="/star.svg"
+            alt="Collected"
+            initial={{ 
+              x: collectedStarPosition.x - 20,
+              y: collectedStarPosition.y - 20,
+              scale: 1,
+              opacity: 1,
+            }}
+            animate={{ 
+              x: window.innerWidth / 2 - 20,
+              y: window.innerHeight * 0.05 - 20,
+              scale: 0.5,
+              opacity: 0.8,
+            }}
+            exit={{ 
+              scale: 0,
+              opacity: 0,
+            }}
+            transition={{ 
+              duration: 0.6,
+              ease: 'easeOut',
+            }}
+            onAnimationComplete={() => setCollectedStarPosition(null)}
+            style={{
+              position: 'absolute',
+              width: 40,
+              height: 40,
+              filter: 'drop-shadow(0 0 15px rgba(255, 255, 0, 1))',
+              zIndex: 200,
+              pointerEvents: 'none',
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       <Rocket />
 
