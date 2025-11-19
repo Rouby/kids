@@ -15,17 +15,18 @@ jobs:
     name: Cleanup Review App
     runs-on: self-hosted
     steps:
-      - name: 🗑️ Delete Kubernetes resources
+      - name: 🔧 Install Helm
+        run: |
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+          chmod 700 get_helm.sh
+          ./get_helm.sh
+
+      - name: 🗑️ Delete Helm release
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           echo "Cleaning up review app for PR #${PR_NUMBER}"
-          
-          # Delete resources in order (ingress, service, deployment)
-          kubectl delete ingress kids-pr-${PR_NUMBER} -n kids --ignore-not-found=true
-          kubectl delete service kids-pr-${PR_NUMBER} -n kids --ignore-not-found=true
-          kubectl delete deployment kids-pr-${PR_NUMBER} -n kids --ignore-not-found=true
-          
+          helm uninstall kids-pr-${PR_NUMBER} -n kids --ignore-not-found || true
           echo "Review app cleanup complete"
 
       - name: 💬 Comment on PR

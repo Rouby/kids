@@ -1,0 +1,13 @@
+# Patterns to ignore when building packages.
+*.swp
+*.bak
+*.tmp
+*~
+.DS_Store
+.git/
+.gitignore
+.bzr/
+.bzrignore
+.hg/
+.hgignore
+.svn/
