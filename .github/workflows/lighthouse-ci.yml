@@ -57,7 +57,7 @@ jobs:
       - name: 🏃 Run Lighthouse CI
         run: |
           # Run Lighthouse on the local preview server
-          bunx autorun \
+          bunx @lhci/cli autorun \
             --collect.url="http://localhost:4173" \
             --collect.numberOfRuns=3 \
             --upload.target=temporary-public-storage
