@@ -62,7 +62,7 @@ jobs:
     needs: build
     runs-on: arc-runner-set-kids
     container:
-      image: ubuntu:22.04
+      image: ghcr.io/actions/actions-runner:latest
     environment:
       name: production
       url: https://kids.aiacta.com

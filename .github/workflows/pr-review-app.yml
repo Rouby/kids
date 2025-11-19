@@ -60,7 +60,7 @@ jobs:
     needs: build
     runs-on: arc-runner-set-kids
     container:
-      image: ubuntu:22.04
+      image: ghcr.io/actions/actions-runner:latest
     environment:
       name: pr-${{ github.event.pull_request.number }}
       url: https://pr-${{ github.event.pull_request.number }}.kids.aiacta.com

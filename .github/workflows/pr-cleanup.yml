@@ -15,7 +15,7 @@ jobs:
     name: Cleanup Review App
     runs-on: arc-runner-set-kids
     container:
-      image: ubuntu:22.04
+      image: ghcr.io/actions/actions-runner:latest
     steps:
       - name: 🔧 Install Helm
         run: |
