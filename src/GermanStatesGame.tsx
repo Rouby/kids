@@ -1,4 +1,5 @@
 import { Button, Container, Group, Paper, Progress, Stack, Text, Title } from '@mantine/core';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 
 // German states (Bundesländer) and their capitals
@@ -122,7 +123,11 @@ export function GermanStatesGame() {
 
   if (gameMode === 'menu') {
     return (
-      <div
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5 }}
         style={{
           position: 'absolute',
           top: 0,
@@ -138,53 +143,91 @@ export function GermanStatesGame() {
       >
         <Container size="md">
           <Stack gap="xl" align="center">
-            <Title order={1} style={{ color: 'white', fontSize: '2.5rem', textAlign: 'center' }}>
-              🇩🇪 Deutsche Bundesländer Quiz
-            </Title>
-            <Text size="xl" style={{ color: 'white', textAlign: 'center' }}>
-              Lerne die 16 Bundesländer und ihre Hauptstädte!
-            </Text>
+            <motion.div
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.8, type: 'spring', bounce: 0.4 }}
+            >
+              <Title order={1} style={{ color: 'white', fontSize: '2.5rem', textAlign: 'center' }}>
+                🇩🇪 Deutsche Bundesländer Quiz
+              </Title>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+            >
+              <Text size="xl" style={{ color: 'white', textAlign: 'center' }}>
+                Lerne die 16 Bundesländer und ihre Hauptstädte!
+              </Text>
+            </motion.div>
 
             <Stack gap="md" style={{ width: '100%', maxWidth: 500, marginTop: '2rem' }}>
-              <Button
-                size="xl"
-                variant="filled"
-                color="teal"
-                onClick={() => startGame('stateToCapital')}
-                style={{ fontSize: '1.3rem', height: 100 }}
+              <motion.div
+                initial={{ x: -100, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.7, duration: 0.5, type: 'spring' }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                🏛️ Hauptstadt finden
-                <br />
-                <Text size="sm" style={{ opacity: 0.9 }}>
-                  Finde die Hauptstadt des Bundeslandes
-                </Text>
-              </Button>
+                <Button
+                  size="xl"
+                  variant="filled"
+                  color="teal"
+                  onClick={() => startGame('stateToCapital')}
+                  style={{ fontSize: '1.3rem', height: 100, width: '100%' }}
+                >
+                  🏛️ Hauptstadt finden
+                  <br />
+                  <Text size="sm" style={{ opacity: 0.9 }}>
+                    Finde die Hauptstadt des Bundeslandes
+                  </Text>
+                </Button>
+              </motion.div>
 
-              <Button
-                size="xl"
-                variant="filled"
-                color="violet"
-                onClick={() => startGame('capitalToState')}
-                style={{ fontSize: '1.3rem', height: 100 }}
+              <motion.div
+                initial={{ x: 100, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.9, duration: 0.5, type: 'spring' }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                🗺️ Bundesland finden
-                <br />
-                <Text size="sm" style={{ opacity: 0.9 }}>
-                  Finde das Bundesland zur Hauptstadt
-                </Text>
-              </Button>
+                <Button
+                  size="xl"
+                  variant="filled"
+                  color="violet"
+                  onClick={() => startGame('capitalToState')}
+                  style={{ fontSize: '1.3rem', height: 100, width: '100%' }}
+                >
+                  🗺️ Bundesland finden
+                  <br />
+                  <Text size="sm" style={{ opacity: 0.9 }}>
+                    Finde das Bundesland zur Hauptstadt
+                  </Text>
+                </Button>
+              </motion.div>
             </Stack>
 
-            {bestStreak > 0 && (
-              <Paper p="md" style={{ background: 'rgba(255,255,255,0.9)', marginTop: '2rem' }}>
-                <Text size="lg" fw={700} ta="center">
-                  🔥 Beste Serie: {bestStreak} richtige Antworten!
-                </Text>
-              </Paper>
-            )}
+            <AnimatePresence>
+              {bestStreak > 0 && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ delay: 1.1, type: 'spring', bounce: 0.5 }}
+                >
+                  <Paper p="md" style={{ background: 'rgba(255,255,255,0.9)', marginTop: '2rem' }}>
+                    <Text size="lg" fw={700} ta="center">
+                      🔥 Beste Serie: {bestStreak} richtige Antworten!
+                    </Text>
+                  </Paper>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </Stack>
         </Container>
-      </div>
+      </motion.div>
     );
   }
 
@@ -193,7 +236,11 @@ export function GermanStatesGame() {
     const emoji = getEmoji(percentage);
 
     return (
-      <div
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5 }}
         style={{
           position: 'absolute',
           top: 0,
@@ -209,48 +256,104 @@ export function GermanStatesGame() {
       >
         <Container size="sm">
           <Stack gap="xl" align="center">
-            <div style={{ fontSize: '8rem' }}>{emoji}</div>
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.2, type: 'spring', bounce: 0.6, duration: 0.8 }}
+              style={{ fontSize: '8rem' }}
+            >
+              {emoji}
+            </motion.div>
             
-            <Title order={1} style={{ color: 'white', fontSize: '2.5rem', textAlign: 'center' }}>
-              Super gemacht!
-            </Title>
+            <motion.div
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+            >
+              <Title order={1} style={{ color: 'white', fontSize: '2.5rem', textAlign: 'center' }}>
+                Super gemacht!
+              </Title>
+            </motion.div>
 
-            <Paper p="xl" style={{ background: 'rgba(255,255,255,0.95)', width: '100%' }}>
-              <Stack gap="lg">
-                <div>
-                  <Text size="xl" ta="center" fw={700}>
-                    Dein Ergebnis
-                  </Text>
-                  <Text size="4rem" ta="center" fw={900} c="blue">
-                    {score} / {questions.length}
-                  </Text>
-                  <Text size="2rem" ta="center" fw={700} c="grape">
-                    {percentage}%
-                  </Text>
-                </div>
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.7, duration: 0.5 }}
+              style={{ width: '100%' }}
+            >
+              <Paper p="xl" style={{ background: 'rgba(255,255,255,0.95)', width: '100%' }}>
+                <Stack gap="lg">
+                  <div>
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.9 }}
+                    >
+                      <Text size="xl" ta="center" fw={700}>
+                        Dein Ergebnis
+                      </Text>
+                    </motion.div>
+                    
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 1.0, type: 'spring', bounce: 0.5 }}
+                    >
+                      <Text size="4rem" ta="center" fw={900} c="blue">
+                        {score} / {questions.length}
+                      </Text>
+                    </motion.div>
+                    
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 1.2, type: 'spring', bounce: 0.5 }}
+                    >
+                      <Text size="2rem" ta="center" fw={700} c="grape">
+                        {percentage}%
+                      </Text>
+                    </motion.div>
+                  </div>
 
-                {bestStreak > 0 && (
-                  <Text size="lg" ta="center" c="orange" fw={600}>
-                    🔥 Beste Serie: {bestStreak} richtig!
-                  </Text>
-                )}
+                  <AnimatePresence>
+                    {bestStreak > 0 && (
+                      <motion.div
+                        initial={{ x: -50, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 1.4, type: 'spring' }}
+                      >
+                        <Text size="lg" ta="center" c="orange" fw={600}>
+                          🔥 Beste Serie: {bestStreak} richtig!
+                        </Text>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                <Stack gap="sm" mt="md">
-                  <Button
-                    size="lg"
-                    variant="filled"
-                    color="green"
-                    onClick={() => setGameMode('menu')}
-                    style={{ fontSize: '1.2rem' }}
+                  <motion.div
+                    initial={{ y: 50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 1.6 }}
                   >
-                    ✨ Nochmal spielen
-                  </Button>
+                    <Stack gap="sm" mt="md">
+                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Button
+                          size="lg"
+                          variant="filled"
+                          color="green"
+                          onClick={() => setGameMode('menu')}
+                          style={{ fontSize: '1.2rem', width: '100%' }}
+                        >
+                          ✨ Nochmal spielen
+                        </Button>
+                      </motion.div>
+                    </Stack>
+                  </motion.div>
                 </Stack>
-              </Stack>
-            </Paper>
+              </Paper>
+            </motion.div>
           </Stack>
         </Container>
-      </div>
+      </motion.div>
     );
   }
 
@@ -259,7 +362,11 @@ export function GermanStatesGame() {
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
       style={{
         position: 'absolute',
         top: 0,
@@ -276,86 +383,155 @@ export function GermanStatesGame() {
       <Container size="md">
         <Stack gap="lg">
           {/* Progress bar */}
-          <Paper p="sm" style={{ background: 'rgba(255,255,255,0.95)' }}>
-            <Group justify="apart" mb="xs">
-              <Text size="sm" fw={600}>
-                Frage {currentQuestion + 1} von {questions.length}
-              </Text>
-              <Text size="sm" fw={600} c="blue">
-                Punkte: {score}
-              </Text>
-            </Group>
-            <Progress value={progress} size="lg" color="teal" />
-            {streak > 1 && (
-              <Text size="sm" c="orange" fw={700} ta="center" mt="xs">
-                🔥 Serie: {streak} richtig!
-              </Text>
-            )}
-          </Paper>
+          <motion.div
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Paper p="sm" style={{ background: 'rgba(255,255,255,0.95)' }}>
+              <Group justify="apart" mb="xs">
+                <Text size="sm" fw={600}>
+                  Frage {currentQuestion + 1} von {questions.length}
+                </Text>
+                <Text size="sm" fw={600} c="blue">
+                  Punkte: {score}
+                </Text>
+              </Group>
+              <Progress value={progress} size="lg" color="teal" />
+              <AnimatePresence>
+                {streak > 1 && (
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: 'spring', bounce: 0.6 }}
+                  >
+                    <Text size="sm" c="orange" fw={700} ta="center" mt="xs">
+                      🔥 Serie: {streak} richtig!
+                    </Text>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </Paper>
+          </motion.div>
 
           {/* Question */}
-          <Paper p="xl" style={{ background: 'rgba(255,255,255,0.95)' }}>
-            <Title order={2} ta="center" mb="xl" style={{ fontSize: '1.8rem', color: '#333' }}>
-              {question.question}
-            </Title>
-
-            {/* Answer options */}
-            <Stack gap="md">
-              {question.options.map((option, index) => (
-                <Button
-                  key={index}
-                  size="xl"
-                  variant="filled"
-                  color={getButtonColor(option)}
-                  onClick={() => handleAnswer(option)}
-                  disabled={showFeedback}
-                  style={{
-                    fontSize: '1.3rem',
-                    height: 'auto',
-                    minHeight: 70,
-                    padding: '15px',
-                    whiteSpace: 'normal',
-                  }}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentQuestion}
+              initial={{ x: 100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -100, opacity: 0 }}
+              transition={{ duration: 0.4, type: 'spring', stiffness: 100 }}
+            >
+              <Paper p="xl" style={{ background: 'rgba(255,255,255,0.95)' }}>
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.2, duration: 0.4 }}
                 >
-                  {option}
-                </Button>
-              ))}
-            </Stack>
+                  <Title order={2} ta="center" mb="xl" style={{ fontSize: '1.8rem', color: '#333' }}>
+                    {question.question}
+                  </Title>
+                </motion.div>
 
-            {/* Feedback */}
-            {showFeedback && (
-              <Stack gap="md" mt="xl">
-                {selectedAnswer === question.correctAnswer ? (
-                  <Paper p="md" style={{ background: '#d4edda', border: '2px solid #28a745' }}>
-                    <Text size="xl" ta="center" fw={700} c="green">
-                      ✅ Richtig! Super! 🎉
-                    </Text>
-                  </Paper>
-                ) : (
-                  <Paper p="md" style={{ background: '#f8d7da', border: '2px solid #dc3545' }}>
-                    <Text size="lg" ta="center" fw={700} c="red">
-                      ❌ Nicht ganz richtig!
-                    </Text>
-                    <Text size="md" ta="center" mt="xs">
-                      Die richtige Antwort ist: <strong>{question.correctAnswer}</strong>
-                    </Text>
-                  </Paper>
-                )}
+                {/* Answer options */}
+                <Stack gap="md">
+                  {question.options.map((option, index) => (
+                    <motion.div
+                      key={option}
+                      initial={{ x: -50, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
+                      whileHover={{ scale: showFeedback ? 1 : 1.03 }}
+                      whileTap={{ scale: showFeedback ? 1 : 0.97 }}
+                    >
+                      <Button
+                        size="xl"
+                        variant="filled"
+                        color={getButtonColor(option)}
+                        onClick={() => handleAnswer(option)}
+                        disabled={showFeedback}
+                        style={{
+                          fontSize: '1.3rem',
+                          height: 'auto',
+                          minHeight: 70,
+                          padding: '15px',
+                          whiteSpace: 'normal',
+                          width: '100%',
+                        }}
+                      >
+                        {option}
+                      </Button>
+                    </motion.div>
+                  ))}
+                </Stack>
 
-                <Button
-                  size="lg"
-                  variant="filled"
-                  color="violet"
-                  onClick={nextQuestion}
-                  style={{ fontSize: '1.2rem' }}
-                >
-                  {currentQuestion < questions.length - 1 ? 'Nächste Frage →' : 'Ergebnis anzeigen 🎯'}
-                </Button>
-              </Stack>
-            )}
-          </Paper>
+                {/* Feedback */}
+                <AnimatePresence>
+                  {showFeedback && (
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0, y: 20 }}
+                      animate={{ scale: 1, opacity: 1, y: 0 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      transition={{ type: 'spring', bounce: 0.4 }}
+                    >
+                      <Stack gap="md" mt="xl">
+                        {selectedAnswer === question.correctAnswer ? (
+                          <motion.div
+                            initial={{ rotate: -5 }}
+                            animate={{ rotate: 0 }}
+                            transition={{ type: 'spring', bounce: 0.6 }}
+                          >
+                            <Paper p="md" style={{ background: '#d4edda', border: '2px solid #28a745' }}>
+                              <Text size="xl" ta="center" fw={700} c="green">
+                                ✅ Richtig! Super! 🎉
+                              </Text>
+                            </Paper>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            initial={{ x: -10 }}
+                            animate={{ x: [0, -10, 10, -10, 10, 0] }}
+                            transition={{ duration: 0.5 }}
+                          >
+                            <Paper p="md" style={{ background: '#f8d7da', border: '2px solid #dc3545' }}>
+                              <Text size="lg" ta="center" fw={700} c="red">
+                                ❌ Nicht ganz richtig!
+                              </Text>
+                              <Text size="md" ta="center" mt="xs">
+                                Die richtige Antwort ist: <strong>{question.correctAnswer}</strong>
+                              </Text>
+                            </Paper>
+                          </motion.div>
+                        )}
+
+                        <motion.div
+                          initial={{ y: 20, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{ delay: 0.3 }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Button
+                            size="lg"
+                            variant="filled"
+                            color="violet"
+                            onClick={nextQuestion}
+                            style={{ fontSize: '1.2rem', width: '100%' }}
+                          >
+                            {currentQuestion < questions.length - 1 ? 'Nächste Frage →' : 'Ergebnis anzeigen 🎯'}
+                          </Button>
+                        </motion.div>
+                      </Stack>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Paper>
+            </motion.div>
+          </AnimatePresence>
         </Stack>
       </Container>
-    </div>
+    </motion.div>
   );
 }
