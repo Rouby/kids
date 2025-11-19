@@ -6,7 +6,7 @@ This template provides a minimal setup to get React working in Vite with HMR and
 
 This application is deployed to Kubernetes at [https://kids.aiacta.com](https://kids.aiacta.com).
 
-### Deployment Workflow
+### Production Deployment
 
 The deployment process is automated through GitHub Actions:
 
@@ -14,12 +14,21 @@ The deployment process is automated through GitHub Actions:
 2. **Push**: The image is pushed to GitHub Container Registry (ghcr.io)
 3. **Deploy**: A self-hosted runner deploys the application to the Kubernetes cluster
 
+### PR Review Apps
+
+Pull requests automatically deploy review apps to test changes before merging:
+
+- **URL Pattern**: `https://pr-{number}.kids.aiacta.com` (e.g., `https://pr-42.kids.aiacta.com`)
+- **Automatic Deployment**: Review apps are deployed when PRs are opened or updated
+- **Automatic Cleanup**: Review apps are removed when PRs are closed or merged
+- **Resources**: Each review app runs with 1 replica (vs 2 for production) in the `kids` namespace
+
 ### Kubernetes Resources
 
 All resources are deployed to the `kids` namespace:
 
 - **Namespace**: Dedicated namespace for the application
-- **Deployment**: Runs 2 replicas with resource limits
+- **Deployment**: Runs 2 replicas with resource limits (1 replica for review apps)
 - **Service**: ClusterIP service exposing port 80
 - **Ingress**: NGINX ingress with TLS using Let's Encrypt via cert-manager
 

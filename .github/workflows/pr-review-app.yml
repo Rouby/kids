@@ -1,0 +1,148 @@
+# Workflow for deploying PR review apps to Kubernetes
+name: Deploy PR Review App
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: ['main']
+
+# Sets permissions of the GITHUB_TOKEN to allow pushing to GitHub Container Registry
+permissions:
+  contents: read
+  packages: write
+  pull-requests: write
+
+# Allow only one concurrent deployment per PR
+concurrency:
+  group: 'pr-${{ github.event.pull_request.number }}'
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and Push PR Docker Image
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+    steps:
+      - name: 🔄 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔑 Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏷️ Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=pr,prefix=pr-
+
+      - name: 🏗️ Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy PR Review App to Kubernetes
+    needs: build
+    runs-on: self-hosted
+    environment:
+      name: pr-${{ github.event.pull_request.number }}
+      url: https://pr-${{ github.event.pull_request.number }}.kids.aiacta.com
+    steps:
+      - name: 🔄 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔧 Prepare review app manifests
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          IMAGE_TAG: pr-${{ github.event.pull_request.number }}
+        run: |
+          # Create a temporary directory for PR-specific manifests
+          mkdir -p /tmp/k8s-pr-${PR_NUMBER}
+          
+          # Process deployment manifest
+          sed "s/name: kids/name: kids-pr-${PR_NUMBER}/g" k8s/deployment.yaml | \
+          sed "s/app: kids/app: kids-pr-${PR_NUMBER}/g" | \
+          sed "s|image: ghcr.io/rouby/kids:latest|image: ghcr.io/rouby/kids:${IMAGE_TAG}|g" | \
+          sed "s/replicas: 2/replicas: 1/g" \
+          > /tmp/k8s-pr-${PR_NUMBER}/deployment.yaml
+          
+          # Process service manifest
+          sed "s/name: kids/name: kids-pr-${PR_NUMBER}/g" k8s/service.yaml | \
+          sed "s/app: kids/app: kids-pr-${PR_NUMBER}/g" \
+          > /tmp/k8s-pr-${PR_NUMBER}/service.yaml
+          
+          # Process ingress manifest
+          sed "s/name: kids/name: kids-pr-${PR_NUMBER}/g" k8s/ingress.yaml | \
+          sed "s/kids.aiacta.com/pr-${PR_NUMBER}.kids.aiacta.com/g" | \
+          sed "s/secretName: kids-tls/secretName: kids-pr-${PR_NUMBER}-tls/g" | \
+          sed "s|name: kids$|name: kids-pr-${PR_NUMBER}|g" \
+          > /tmp/k8s-pr-${PR_NUMBER}/ingress.yaml
+
+      - name: 🚀 Apply Kubernetes manifests
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f /tmp/k8s-pr-${PR_NUMBER}/deployment.yaml
+          kubectl apply -f /tmp/k8s-pr-${PR_NUMBER}/service.yaml
+          kubectl apply -f /tmp/k8s-pr-${PR_NUMBER}/ingress.yaml
+
+      - name: ⏳ Wait for rollout to complete
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: kubectl rollout status deployment/kids-pr-${PR_NUMBER} -n kids --timeout=5m
+
+      - name: 💬 Comment on PR
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        with:
+          script: |
+            const prNumber = process.env.PR_NUMBER;
+            const url = `https://pr-${prNumber}.kids.aiacta.com`;
+            
+            const body = `🚀 Review app deployed successfully!\n\n**URL:** ${url}\n\nThe review app will be automatically cleaned up when this PR is closed or merged.`;
+            
+            // Find existing comment
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.data.find(comment => 
+              comment.user.type === 'Bot' && comment.body.includes('Review app deployed')
+            );
+            
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
