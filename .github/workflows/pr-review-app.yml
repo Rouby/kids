@@ -77,13 +77,16 @@ jobs:
           chmod 700 get_helm.sh
           ./get_helm.sh
 
+      - name: 🔐 Setup namespace
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+
       - name: 🚀 Deploy review app with Helm
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           helm upgrade --install kids-pr-${PR_NUMBER} ./helm/kids \
             --namespace kids \
-            --create-namespace \
             --set fullnameOverride=kids-pr-${PR_NUMBER} \
             --set image.tag=pr-${PR_NUMBER} \
             --set replicaCount=1 \
