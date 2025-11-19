@@ -59,6 +59,8 @@ jobs:
     name: Deploy PR Review App to Kubernetes
     needs: build
     runs-on: arc-runner-set-kids
+    container:
+      image: ubuntu:22.04
     environment:
       name: pr-${{ github.event.pull_request.number }}
       url: https://pr-${{ github.event.pull_request.number }}.kids.aiacta.com
