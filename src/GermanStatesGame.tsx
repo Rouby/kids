@@ -474,14 +474,14 @@ export function GermanStatesGame() {
                       initial={{ scale: 0.8, opacity: 0, y: 20 }}
                       animate={{ scale: 1, opacity: 1, y: 0 }}
                       exit={{ scale: 0.8, opacity: 0 }}
-                      transition={{ type: 'spring', bounce: 0.4 }}
+                      transition={{ type: 'spring', bounce: 0.4, duration: 0.4 }}
                     >
                       <Stack gap="md" mt="xl">
                         {selectedAnswer === question.correctAnswer ? (
                           <motion.div
                             initial={{ rotate: -5 }}
                             animate={{ rotate: 0 }}
-                            transition={{ type: 'spring', bounce: 0.6 }}
+                            transition={{ type: 'spring', bounce: 0.5, duration: 0.3 }}
                           >
                             <Paper p="md" style={{ background: '#d4edda', border: '2px solid #28a745' }}>
                               <Text size="xl" ta="center" fw={700} c="green">
@@ -493,7 +493,7 @@ export function GermanStatesGame() {
                           <motion.div
                             initial={{ x: -10 }}
                             animate={{ x: [0, -10, 10, -10, 10, 0] }}
-                            transition={{ duration: 0.5 }}
+                            transition={{ duration: 0.4 }}
                           >
                             <Paper p="md" style={{ background: '#f8d7da', border: '2px solid #dc3545' }}>
                               <Text size="lg" ta="center" fw={700} c="red">
@@ -509,7 +509,7 @@ export function GermanStatesGame() {
                         <motion.div
                           initial={{ y: 20, opacity: 0 }}
                           animate={{ y: 0, opacity: 1 }}
-                          transition={{ delay: 0.3 }}
+                          transition={{ delay: 0.1 }}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
