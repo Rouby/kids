@@ -75,8 +75,8 @@ jobs:
       - name: 📊 Parse Lighthouse Results
         id: lighthouse-results
         run: |
-          # Get the latest Lighthouse results file
-          results_file=$(ls -t .lighthouseci/*.json | head -1)
+          # Get the latest Lighthouse results file (exclude links.json and manifest.json)
+          results_file=$(ls -t .lighthouseci/lhr-*.json 2>/dev/null | head -1)
           
           if [ -f "$results_file" ]; then
             echo "Found results file: $results_file"
