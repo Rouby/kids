@@ -36,6 +36,16 @@ export function Dashboard({ onSelectApp }: DashboardProps) {
               🚀 Asteroids
             </Button>
 
+            <Button
+              size="xl"
+              variant="filled"
+              color="teal"
+              onClick={() => onSelectApp('germanstates')}
+              style={{ fontSize: '1.5rem', height: 80 }}
+            >
+              🇩🇪 Deutsche Bundesländer
+            </Button>
+
             {/* Placeholder for future apps */}
             <Button
               size="xl"
