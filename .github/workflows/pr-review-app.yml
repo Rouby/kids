@@ -66,43 +66,34 @@ jobs:
       - name: 🔄 Checkout
         uses: actions/checkout@v4
 
-      - name: 🔧 Prepare review app manifests
-        env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          IMAGE_TAG: pr-${{ github.event.pull_request.number }}
+      - name: 🔧 Install kubectl and Helm
         run: |
-          # Create a temporary directory for PR-specific manifests
-          mkdir -p /tmp/k8s-pr-${PR_NUMBER}
-          
-          # Process deployment manifest
-          sed "s/name: kids/name: kids-pr-${PR_NUMBER}/g" k8s/deployment.yaml | \
-          sed "s/app: kids/app: kids-pr-${PR_NUMBER}/g" | \
-          sed "s|image: ghcr.io/rouby/kids:latest|image: ghcr.io/rouby/kids:${IMAGE_TAG}|g" | \
-          sed "s/replicas: 2/replicas: 1/g" \
-          > /tmp/k8s-pr-${PR_NUMBER}/deployment.yaml
-          
-          # Process service manifest
-          sed "s/name: kids/name: kids-pr-${PR_NUMBER}/g" k8s/service.yaml | \
-          sed "s/app: kids/app: kids-pr-${PR_NUMBER}/g" \
-          > /tmp/k8s-pr-${PR_NUMBER}/service.yaml
-          
-          # Process ingress manifest
-          sed "s/name: kids/name: kids-pr-${PR_NUMBER}/g" k8s/ingress.yaml | \
-          sed "s/kids.aiacta.com/pr-${PR_NUMBER}.kids.aiacta.com/g" | \
-          sed "s/secretName: kids-tls/secretName: kids-pr-${PR_NUMBER}-tls/g" | \
-          sed "s|name: kids$|name: kids-pr-${PR_NUMBER}|g" \
-          > /tmp/k8s-pr-${PR_NUMBER}/ingress.yaml
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+          kubectl version --client
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+          chmod 700 get_helm.sh
+          ./get_helm.sh
 
-      - name: 🚀 Apply Kubernetes manifests
+      - name: 🚀 Deploy review app with Helm
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          kubectl apply -f k8s/namespace.yaml
-          kubectl apply -f /tmp/k8s-pr-${PR_NUMBER}/deployment.yaml
-          kubectl apply -f /tmp/k8s-pr-${PR_NUMBER}/service.yaml
-          kubectl apply -f /tmp/k8s-pr-${PR_NUMBER}/ingress.yaml
+          helm upgrade --install kids-pr-${PR_NUMBER} ./helm/kids \
+            --namespace kids \
+            --create-namespace \
+            --set fullnameOverride=kids-pr-${PR_NUMBER} \
+            --set image.tag=pr-${PR_NUMBER} \
+            --set replicaCount=1 \
+            --set ingress.hosts[0].host=pr-${PR_NUMBER}.kids.aiacta.com \
+            --set ingress.hosts[0].paths[0].path=/ \
+            --set ingress.hosts[0].paths[0].pathType=Prefix \
+            --set ingress.tls[0].secretName=kids-pr-${PR_NUMBER}-tls \
+            --set ingress.tls[0].hosts[0]=pr-${PR_NUMBER}.kids.aiacta.com \
+            --wait \
+            --timeout 5m
 
-      - name: ⏳ Wait for rollout to complete
+      - name: ✅ Verify deployment
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: kubectl rollout status deployment/kids-pr-${PR_NUMBER} -n kids --timeout=5m

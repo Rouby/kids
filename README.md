@@ -25,8 +25,9 @@ Pull requests automatically deploy review apps to test changes before merging:
 
 ### Kubernetes Resources
 
-All resources are deployed to the `kids` namespace:
+All resources are deployed to the `kids` namespace using Helm:
 
+- **Helm Chart**: Located in `helm/kids/`
 - **Namespace**: Dedicated namespace for the application
 - **Deployment**: Runs 2 replicas with resource limits (1 replica for review apps)
 - **Service**: ClusterIP service exposing port 80
@@ -41,15 +42,27 @@ To manually deploy changes:
 docker build -t ghcr.io/rouby/kids:latest .
 docker push ghcr.io/rouby/kids:latest
 
-# Apply Kubernetes manifests (requires kubectl access)
-kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
-kubectl apply -f k8s/ingress.yaml
+# Deploy with Helm (requires kubectl and helm)
+helm upgrade --install kids ./helm/kids \
+  --namespace kids \
+  --create-namespace \
+  --set image.tag=latest \
+  --wait
 
-# Force a rolling restart to pull the latest image
-kubectl rollout restart deployment/kids -n kids
-kubectl rollout status deployment/kids -n kids
+# Deploy a PR review app manually
+PR_NUMBER=42
+helm upgrade --install kids-pr-${PR_NUMBER} ./helm/kids \
+  --namespace kids \
+  --create-namespace \
+  --set fullnameOverride=kids-pr-${PR_NUMBER} \
+  --set image.tag=pr-${PR_NUMBER} \
+  --set replicaCount=1 \
+  --set ingress.hosts[0].host=pr-${PR_NUMBER}.kids.aiacta.com \
+  --set ingress.hosts[0].paths[0].path=/ \
+  --set ingress.hosts[0].paths[0].pathType=Prefix \
+  --set ingress.tls[0].secretName=kids-pr-${PR_NUMBER}-tls \
+  --set ingress.tls[0].hosts[0]=pr-${PR_NUMBER}.kids.aiacta.com \
+  --wait
 ```
 
 ## Development

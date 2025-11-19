@@ -1,0 +1,55 @@
+# Values for PR review apps
+# This file is used as a base and gets values overridden via --set flags
+
+nameOverride: ""
+fullnameOverride: ""
+
+namespace: kids
+
+image:
+  repository: ghcr.io/rouby/kids
+  pullPolicy: IfNotPresent
+  tag: "pr-1"  # This will be overridden
+
+replicaCount: 1  # Review apps use fewer replicas
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt"
+  hosts:
+    - host: pr-1.kids.aiacta.com  # This will be overridden
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: kids-pr-1-tls  # This will be overridden
+      hosts:
+        - pr-1.kids.aiacta.com  # This will be overridden
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 64Mi
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5

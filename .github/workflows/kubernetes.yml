@@ -68,15 +68,23 @@ jobs:
       - name: 🔄 Checkout
         uses: actions/checkout@v4
 
-      - name: 🚀 Apply Kubernetes manifests
+      - name: 🔧 Install kubectl and Helm
         run: |
-          kubectl apply -f k8s/namespace.yaml
-          kubectl apply -f k8s/deployment.yaml
-          kubectl apply -f k8s/service.yaml
-          kubectl apply -f k8s/ingress.yaml
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+          kubectl version --client
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+          chmod 700 get_helm.sh
+          ./get_helm.sh
 
-      - name: 🔄 Restart deployment
-        run: kubectl rollout restart deployment/kids -n kids
+      - name: 🚀 Deploy with Helm
+        run: |
+          helm upgrade --install kids ./helm/kids \
+            --namespace kids \
+            --create-namespace \
+            --set image.tag=latest \
+            --wait \
+            --timeout 5m
 
-      - name: ⏳ Wait for rollout to complete
+      - name: ✅ Verify deployment
         run: kubectl rollout status deployment/kids -n kids --timeout=5m
