@@ -7,7 +7,16 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
+      injectRegister: 'auto',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+      },
+      devOptions: {
+        enabled: false,
+      },
       manifest: {
         name: 'Kids App',
         short_name: 'Kids App',
