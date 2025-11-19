@@ -79,11 +79,14 @@ jobs:
           chmod 700 get_helm.sh
           ./get_helm.sh
 
+      - name: 🔐 Setup namespace
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+
       - name: 🚀 Deploy with Helm
         run: |
           helm upgrade --install kids ./helm/kids \
             --namespace kids \
-            --create-namespace \
             --set image.tag=latest \
             --wait \
             --timeout 5m
