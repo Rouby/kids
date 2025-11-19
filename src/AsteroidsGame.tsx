@@ -158,14 +158,19 @@ function Rocket() {
       <motion.div
         style={{
           position: 'absolute',
-          background: 'red',
           pointerEvents: 'none',
           x,
           bottom: yPadding,
           width: rocketWidth,
           height: 60,
         }}
-      />
+      >
+        <img 
+          src="/spaceship.svg" 
+          alt="Spaceship" 
+          style={{ width: '100%', height: '100%' }} 
+        />
+      </motion.div>
 
       <div
         style={{
@@ -222,14 +227,18 @@ function Planet({
       ref={innerRef}
       style={{
         position: 'absolute',
-        background: 'red',
         x,
         y,
         width: size,
         height: size,
-        borderRadius: size / 2,
       }}
-    />
+    >
+      <img 
+        src="/asteroid.svg" 
+        alt="Asteroid" 
+        style={{ width: '100%', height: '100%' }} 
+      />
+    </motion.div>
   );
 }
 
@@ -262,13 +271,17 @@ function Coin({
       ref={innerRef}
       style={{
         position: 'absolute',
-        background: 'yellow',
         x,
         y,
         width: size,
         height: size,
-        borderRadius: size / 2,
       }}
-    />
+    >
+      <img 
+        src="/star.svg" 
+        alt="Star" 
+        style={{ width: '100%', height: '100%' }} 
+      />
+    </motion.div>
   );
 }
