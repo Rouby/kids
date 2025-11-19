@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="100" height="120">
+  <!-- Main body of spaceship -->
+  <defs>
+    <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="windowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7dd3fc;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0ea5e9;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="thrusterGlow">
+      <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#dc2626;stop-opacity:0.8" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Main fuselage -->
+  <path d="M 50 10 L 65 60 L 65 90 L 50 100 L 35 90 L 35 60 Z" 
+        fill="url(#bodyGradient)" 
+        stroke="#1e40af" 
+        stroke-width="2"/>
+  
+  <!-- Wings -->
+  <path d="M 35 50 L 15 70 L 20 80 L 35 65 Z" 
+        fill="#3b82f6" 
+        stroke="#1e40af" 
+        stroke-width="1.5"/>
+  <path d="M 65 50 L 85 70 L 80 80 L 65 65 Z" 
+        fill="#3b82f6" 
+        stroke="#1e40af" 
+        stroke-width="1.5"/>
+  
+  <!-- Cockpit window -->
+  <ellipse cx="50" cy="30" rx="10" ry="12" 
+           fill="url(#windowGradient)" 
+           stroke="#0ea5e9" 
+           stroke-width="1.5"/>
+  <ellipse cx="48" cy="28" rx="4" ry="5" 
+           fill="#f0f9ff" 
+           opacity="0.6"/>
+  
+  <!-- Engine thrusters -->
+  <rect x="42" y="100" width="6" height="15" 
+        rx="2" 
+        fill="url(#thrusterGlow)"/>
+  <rect x="52" y="100" width="6" height="15" 
+        rx="2" 
+        fill="url(#thrusterGlow)"/>
+  
+  <!-- Flame effect -->
+  <path d="M 45 115 L 42 108 L 45 110 L 48 105 L 45 115 Z" 
+        fill="#fbbf24" 
+        opacity="0.8">
+    <animate attributeName="opacity" values="0.8;1;0.8" dur="0.3s" repeatCount="indefinite"/>
+  </path>
+  <path d="M 55 115 L 52 108 L 55 110 L 58 105 L 55 115 Z" 
+        fill="#fbbf24" 
+        opacity="0.8">
+    <animate attributeName="opacity" values="0.8;1;0.8" dur="0.3s" repeatCount="indefinite"/>
+  </path>
+  
+  <!-- Detail accents -->
+  <line x1="50" y1="45" x2="50" y2="90" 
+        stroke="#1e40af" 
+        stroke-width="1" 
+        opacity="0.5"/>
+  <circle cx="50" cy="55" r="3" 
+          fill="#f59e0b" 
+          stroke="#dc2626" 
+          stroke-width="1"/>
+</svg>

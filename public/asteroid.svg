@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <radialGradient id="asteroidGradient">
+      <stop offset="0%" style="stop-color:#78716c;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#57534e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#292524;stop-opacity:1" />
+    </radialGradient>
+    <radialGradient id="craterGradient">
+      <stop offset="0%" style="stop-color:#1c1917;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#44403c;stop-opacity:1" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Main asteroid body - irregular shape -->
+  <path d="M 25 15 L 45 8 L 65 12 L 82 25 L 90 45 L 85 65 L 70 82 L 50 92 L 30 88 L 15 70 L 10 50 L 18 30 Z" 
+        fill="url(#asteroidGradient)" 
+        stroke="#1c1917" 
+        stroke-width="2"/>
+  
+  <!-- Large craters -->
+  <ellipse cx="35" cy="30" rx="10" ry="8" 
+           fill="url(#craterGradient)" 
+           opacity="0.8"/>
+  <ellipse cx="65" cy="45" rx="12" ry="10" 
+           fill="url(#craterGradient)" 
+           opacity="0.7"/>
+  <ellipse cx="45" cy="70" rx="8" ry="7" 
+           fill="url(#craterGradient)" 
+           opacity="0.8"/>
+  
+  <!-- Small craters -->
+  <circle cx="25" cy="55" r="5" 
+          fill="url(#craterGradient)" 
+          opacity="0.6"/>
+  <circle cx="70" cy="25" r="4" 
+          fill="url(#craterGradient)" 
+          opacity="0.6"/>
+  <circle cx="55" cy="55" r="3" 
+          fill="url(#craterGradient)" 
+          opacity="0.5"/>
+  
+  <!-- Rock texture details -->
+  <path d="M 40 20 L 42 22 L 41 24" 
+        stroke="#44403c" 
+        stroke-width="2" 
+        fill="none" 
+        opacity="0.7"/>
+  <path d="M 75 35 L 78 37 L 76 40" 
+        stroke="#44403c" 
+        stroke-width="2" 
+        fill="none" 
+        opacity="0.7"/>
+  <path d="M 35 75 L 37 78 L 35 80" 
+        stroke="#44403c" 
+        stroke-width="2" 
+        fill="none" 
+        opacity="0.7"/>
+  
+  <!-- Highlight for 3D effect -->
+  <ellipse cx="30" cy="25" rx="8" ry="6" 
+           fill="#a8a29e" 
+           opacity="0.3"/>
+</svg>
