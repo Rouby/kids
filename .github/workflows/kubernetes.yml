@@ -70,12 +70,13 @@ jobs:
 
       - name: 🚀 Apply Kubernetes manifests
         run: |
+          kubectl apply -f k8s/namespace.yaml
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
           kubectl apply -f k8s/ingress.yaml
 
       - name: 🔄 Restart deployment
-        run: kubectl rollout restart deployment/kids
+        run: kubectl rollout restart deployment/kids -n kids
 
       - name: ⏳ Wait for rollout to complete
-        run: kubectl rollout status deployment/kids --timeout=5m
+        run: kubectl rollout status deployment/kids -n kids --timeout=5m

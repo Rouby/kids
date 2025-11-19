@@ -16,6 +16,9 @@ The deployment process is automated through GitHub Actions:
 
 ### Kubernetes Resources
 
+All resources are deployed to the `kids` namespace:
+
+- **Namespace**: Dedicated namespace for the application
 - **Deployment**: Runs 2 replicas with resource limits
 - **Service**: ClusterIP service exposing port 80
 - **Ingress**: NGINX ingress with TLS using Let's Encrypt via cert-manager
@@ -30,13 +33,14 @@ docker build -t ghcr.io/rouby/kids:latest .
 docker push ghcr.io/rouby/kids:latest
 
 # Apply Kubernetes manifests (requires kubectl access)
+kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
 kubectl apply -f k8s/ingress.yaml
 
 # Force a rolling restart to pull the latest image
-kubectl rollout restart deployment/kids
-kubectl rollout status deployment/kids
+kubectl rollout restart deployment/kids -n kids
+kubectl rollout status deployment/kids -n kids
 ```
 
 ## Development
