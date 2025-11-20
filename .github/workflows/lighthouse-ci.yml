@@ -4,7 +4,7 @@ name: Lighthouse CI
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    branches: ['main']
+    branches: ["main"]
 
 # Sets permissions to allow commenting on PRs
 permissions:
@@ -32,9 +32,9 @@ jobs:
 
       - name: 🚀 Start preview server
         run: |
-          bun run preview &
+          bun run start
           echo $! > preview.pid
-          
+
           # Wait for server to be ready
           echo "Waiting for preview server to start..."
           max_attempts=30
@@ -48,7 +48,7 @@ jobs:
             sleep 1
             attempt=$((attempt + 1))
           done
-          
+
           if [ $attempt -gt $max_attempts ]; then
             echo "Preview server failed to start"
             exit 1
@@ -71,4 +71,3 @@ jobs:
             kill $(cat preview.pid) || true
             rm preview.pid
           fi
-
