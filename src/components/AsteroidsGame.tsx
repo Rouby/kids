@@ -5,6 +5,16 @@ import { Container, Sprite, Texture, Assets, Text, Graphics } from 'pixi.js';
 // Register PixiJS components for use in JSX
 extend({ Container, Sprite, Text, Graphics });
 
+// Helper function to play audio
+function playSound(audioRef: React.MutableRefObject<HTMLAudioElement | null>) {
+  if (audioRef.current) {
+    audioRef.current.currentTime = 0;
+    audioRef.current.play().catch(() => {
+      // Ignore errors if sound can't play (e.g., autoplay restrictions)
+    });
+  }
+}
+
 interface GameObject {
   id: string;
   x: number;
@@ -40,7 +50,9 @@ export function AsteroidsGame() {
 
     // Load sound effects
     collectStarSoundRef.current = new Audio('/collect-star.mp3');
+    collectStarSoundRef.current.preload = 'auto';
     collisionSoundRef.current = new Audio('/collision.mp3');
+    collisionSoundRef.current.preload = 'auto';
   }, []);
 
   useEffect(() => {
@@ -219,12 +231,7 @@ function GameScene({
         ) {
           setGameOver(true);
           // Play collision sound
-          if (collisionSoundRef.current) {
-            collisionSoundRef.current.currentTime = 0;
-            collisionSoundRef.current.play().catch(() => {
-              // Ignore errors if sound can't play
-            });
-          }
+          playSound(collisionSoundRef);
         }
       });
 
@@ -275,12 +282,7 @@ function GameScene({
       if (collectedStarIds.length > 0) {
         newStars = newStars.filter(star => !collectedStarIds.includes(star.id));
         // Play collect star sound
-        if (collectStarSoundRef.current) {
-          collectStarSoundRef.current.currentTime = 0;
-          collectStarSoundRef.current.play().catch(() => {
-            // Ignore errors if sound can't play
-          });
-        }
+        playSound(collectStarSoundRef);
       }
 
       return newStars;
