@@ -87,7 +87,7 @@ helm upgrade --install kids ./helm/kids \
   --namespace kids \
   --create-namespace \
   --set image.tag=main-${GIT_SHA} \
-  --set deployment.annotations."deployment\.kubernetes\.io/revision-sha"=${GIT_SHA} \
+  --set-string deployment.annotations."deployment\.kubernetes\.io/revision-sha"=${GIT_SHA} \
   --wait
 
 # Deploy a PR review app manually
@@ -101,7 +101,7 @@ helm upgrade --install kids-pr-${PR_NUMBER} ./helm/kids \
   --create-namespace \
   --set fullnameOverride=kids-pr-${PR_NUMBER} \
   --set image.tag=pr-${PR_NUMBER}-${GIT_SHA} \
-  --set deployment.annotations."deployment\.kubernetes\.io/revision-sha"=${GIT_SHA} \
+  --set-string deployment.annotations."deployment\.kubernetes\.io/revision-sha"=${GIT_SHA} \
   --set replicaCount=1 \
   --set ingress.hosts[0].host=pr-${PR_NUMBER}.kids.aiacta.com \
   --set ingress.hosts[0].paths[0].path=/ \

@@ -100,7 +100,7 @@ jobs:
           helm upgrade --install kids ./helm/kids \
             --namespace kids \
             --set image.tag=main-${SHA_SHORT} \
-            --set deployment.annotations."deployment\.kubernetes\.io/revision-sha"=${SHA_SHORT} \
+            --set-string deployment.annotations."deployment\.kubernetes\.io/revision-sha"=${SHA_SHORT} \
             --wait \
             --timeout 5m
 
