@@ -1,10 +1,11 @@
 import { Button, Container, Stack, Title } from '@mantine/core';
+import { createFileRoute, Link } from '@tanstack/react-router';
 
-interface DashboardProps {
-  onSelectApp: (appName: string) => void;
-}
+export const Route = createFileRoute('/')({
+  component: Dashboard,
+});
 
-export function Dashboard({ onSelectApp }: DashboardProps) {
+function Dashboard() {
   return (
     <div
       style={{
@@ -27,44 +28,36 @@ export function Dashboard({ onSelectApp }: DashboardProps) {
 
           <Stack gap="md" style={{ width: '100%', maxWidth: 400 }}>
             <Button
+              component={Link}
+              to="/asteroids"
               size="xl"
               variant="filled"
               color="blue"
-              onClick={() => onSelectApp('asteroids')}
               style={{ fontSize: '1.5rem', height: 80 }}
             >
               🚀 Asteroids
             </Button>
 
             <Button
+              component={Link}
+              to="/germanstates"
               size="xl"
               variant="filled"
               color="teal"
-              onClick={() => onSelectApp('germanstates')}
               style={{ fontSize: '1.5rem', height: 80 }}
             >
               🇩🇪 Deutsche Bundesländer
             </Button>
 
             <Button
+              component={Link}
+              to="/clock"
               size="xl"
               variant="filled"
-              color="violet"
-              onClick={() => onSelectApp('clock')}
+              color="orange"
               style={{ fontSize: '1.5rem', height: 80 }}
             >
               🕐 Uhr Lernen
-            </Button>
-
-            {/* Placeholder for future apps */}
-            <Button
-              size="xl"
-              variant="light"
-              color="gray"
-              disabled
-              style={{ fontSize: '1.5rem', height: 80 }}
-            >
-              🎮 More Games Coming Soon...
             </Button>
           </Stack>
         </Stack>

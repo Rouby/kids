@@ -13,6 +13,9 @@ dist-ssr
 *.local
 package-lock.json
 
+# TanStack Router
+src/routeTree.gen.ts
+
 # Lighthouse CI
 .lighthouseci
 
