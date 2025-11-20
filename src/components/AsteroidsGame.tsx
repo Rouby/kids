@@ -1,110 +1,63 @@
-import { randomId } from '@mantine/hooks';
-import { motion, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
-import { RefObject, createRef, useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { Stage, Container, Sprite, useTick } from '@pixi/react';
+
+interface GameObject {
+  id: string;
+  x: number;
+  y: number;
+}
 
 export function AsteroidsGame() {
   const [score, setScore] = useState(0);
   const [collectedStarPosition, setCollectedStarPosition] = useState<{ x: number; y: number } | null>(null);
-
-  const [planets, setPlanets] = useState<
-    { id: string; ref: RefObject<HTMLDivElement>; initialX: number }[]
-  >([
-    {
-      id: randomId(),
-      ref: createRef(),
-      initialX: Math.random() * document.body.clientWidth,
-    },
-  ]);
-  const [coins, setCoins] = useState<
-    { id: string; ref: RefObject<HTMLDivElement>; initialX: number }[]
-  >([]);
+  const [gameSize, setGameSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  
+  const rocketXRef = useRef(window.innerWidth / 2);
 
   useEffect(() => {
-    for (let i = 0; i < 1; i++) {
-      setTimeout(() => {
-        setPlanets((planets) => [
-          ...planets,
-          {
-            id: randomId(),
-            ref: createRef(),
-            initialX: Math.random() * document.body.clientWidth,
-          },
-        ]);
-      }, 250 + Math.random() * 1000);
-    }
+    const handleResize = () => {
+      setGameSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCoins((coins) =>
-        coins.length > 10
-          ? coins
-          : [
-              ...coins,
-              {
-                id: randomId(),
-                ref: createRef(),
-                initialX: Math.random() * document.body.clientWidth,
-              },
-            ],
+    const handlePointerMove = (evt: PointerEvent) => {
+      const rocketWidth = 50;
+      const xPadding = 50;
+      rocketXRef.current = Math.min(
+        gameSize.width - xPadding - rocketWidth / 2,
+        Math.max(xPadding - rocketWidth / 2, evt.clientX - rocketWidth / 2)
       );
-    }, 1000);
+    };
 
-    return () => clearInterval(interval);
+    window.addEventListener('pointermove', handlePointerMove);
+    return () => window.removeEventListener('pointermove', handlePointerMove);
+  }, [gameSize.width]);
+
+  const handleScoreChange = useCallback((newScore: number | ((prev: number) => number)) => {
+    setScore(newScore);
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      planets.forEach((planet) => {
-        const planetRect = planet.ref.current?.getBoundingClientRect();
-        const rocketRect = document
-          .querySelector('[style*="pointer-events: none"]')
-          ?.getBoundingClientRect();
-
-        if (
-          planetRect &&
-          rocketRect &&
-          planetRect.left < rocketRect.right &&
-          planetRect.right > rocketRect.left &&
-          planetRect.top < rocketRect.bottom &&
-          planetRect.bottom > rocketRect.top
-        ) {
-          // setPlanets((planets) => planets.filter((p) => p.id !== planet.id));
-          setScore(0);
-        }
-      });
-
-      coins.forEach((coin) => {
-        const coinRect = coin.ref.current?.getBoundingClientRect();
-        const rocketRect = document
-          .querySelector('[style*="pointer-events: none"]')
-          ?.getBoundingClientRect();
-
-        if (
-          coinRect &&
-          rocketRect &&
-          coinRect.left < rocketRect.right &&
-          coinRect.right > rocketRect.left &&
-          coinRect.top < rocketRect.bottom &&
-          coinRect.bottom > rocketRect.top
-        ) {
-          // Set the position for the collection animation
-          setCollectedStarPosition({
-            x: coinRect.left + coinRect.width / 2,
-            y: coinRect.top + coinRect.height / 2,
-          });
-          setCoins((coins) => coins.filter((c) => c.id !== coin.id));
-          setScore((score) => score + 1);
-        }
-      });
-    }, 1);
-
-    return () => clearInterval(interval);
-  }, [coins, planets]);
+  const handleStarCollected = useCallback((x: number, y: number) => {
+    setCollectedStarPosition({ x, y });
+  }, []);
 
   return (
     <>
-      <Background />
+      <div
+        style={{
+          position: 'absolute',
+          background: 'black',
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+        }}
+      />
 
       {/* Score display with star icons */}
       <div
@@ -122,7 +75,6 @@ export function AsteroidsGame() {
           zIndex: 100,
         }}
       >
-        {/* Display collected stars */}
         {Array.from({ length: Math.min(score, 20) }).map((_, i) => (
           <motion.img
             key={i}
@@ -144,7 +96,6 @@ export function AsteroidsGame() {
           />
         ))}
         
-        {/* Score number */}
         <motion.div
           key={score}
           initial={{ scale: 1.5, opacity: 0.5 }}
@@ -202,174 +153,179 @@ export function AsteroidsGame() {
         )}
       </AnimatePresence>
 
-      <Rocket />
-
-      {planets.map((planet) => (
-        <Planet
-          key={planet.id}
-          innerRef={planet.ref}
-          initialX={planet.initialX}
-        />
-      ))}
-
-      {coins.map((coin) => (
-        <Coin key={coin.id} innerRef={coin.ref} initialX={coin.initialX} />
-      ))}
-    </>
-  );
-}
-
-function Background() {
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        background: 'black',
-        top: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
-      }}
-    />
-  );
-}
-
-function Rocket() {
-  const x = useSpring(0);
-
-  const rocketWidth = 50;
-  const xPadding = 50;
-  const yPadding = '15vh';
-
-  return (
-    <>
-      <motion.div
-        style={{
-          position: 'absolute',
-          pointerEvents: 'none',
-          x,
-          bottom: yPadding,
-          width: rocketWidth,
-          height: 60,
-        }}
+      <Stage 
+        width={gameSize.width} 
+        height={gameSize.height}
+        options={{ backgroundColor: 0x000000, antialias: true }}
       >
-        <img 
-          src="/spaceship.svg" 
-          alt="Spaceship" 
-          style={{ width: '100%', height: '100%' }} 
+        <GameScene
+          gameSize={gameSize}
+          rocketXRef={rocketXRef}
+          onScoreChange={handleScoreChange}
+          onStarCollected={handleStarCollected}
         />
-      </motion.div>
-
-      <div
-        style={{
-          position: 'absolute',
-          background: 'transparent',
-          touchAction: 'none',
-          top: 0,
-          bottom: 0,
-          left: 0,
-          right: 0,
-        }}
-        onPointerMove={(evt) => {
-          x.set(
-            Math.min(
-              document.body.clientWidth - xPadding - rocketWidth / 2,
-              Math.max(
-                xPadding - rocketWidth / 2,
-                evt.clientX - rocketWidth / 2,
-              ),
-            ),
-          );
-        }}
-      />
+      </Stage>
     </>
   );
 }
 
-function Planet({
-  innerRef,
-  initialX,
-}: {
-  innerRef: RefObject<HTMLDivElement>;
-  initialX: number;
-}) {
-  const x = useMotionValue(initialX);
-  const y = useMotionValue(0);
-
-  const size = 80;
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      y.set(y.get() + 2);
-      if (y.get() > document.body.clientHeight) {
-        x.set(Math.random() * document.body.clientWidth);
-        y.set(0);
-      }
-    }, 1);
-
-    return () => clearInterval(interval);
-  }, [x, y]);
-
-  return (
-    <motion.div
-      ref={innerRef}
-      style={{
-        position: 'absolute',
-        x,
-        y,
-        width: size,
-        height: size,
-      }}
-    >
-      <img 
-        src="/asteroid.svg" 
-        alt="Asteroid" 
-        style={{ width: '100%', height: '100%' }} 
-      />
-    </motion.div>
-  );
+interface GameSceneProps {
+  gameSize: { width: number; height: number };
+  rocketXRef: React.MutableRefObject<number>;
+  onScoreChange: (score: number | ((prev: number) => number)) => void;
+  onStarCollected: (x: number, y: number) => void;
 }
 
-function Coin({
-  innerRef,
-  initialX,
-}: {
-  innerRef: RefObject<HTMLDivElement>;
-  initialX: number;
-}) {
-  const x = useMotionValue(initialX);
-  const y = useMotionValue(0);
+function GameScene({
+  gameSize,
+  rocketXRef,
+  onScoreChange,
+  onStarCollected,
+}: GameSceneProps) {
+  const [asteroids, setAsteroids] = useState<GameObject[]>([
+    { id: '1', x: Math.random() * window.innerWidth, y: 0 }
+  ]);
+  const [stars, setStars] = useState<GameObject[]>([]);
+  
+  const nextStarTimeRef = useRef(Date.now() + 1000);
+  const nextAsteroidTimeRef = useRef(Date.now() + 250 + Math.random() * 1000);
 
-  const size = 40;
+  useTick(() => {
+    const now = Date.now();
+    const rocketWidth = 50;
+    const rocketHeight = 60;
+    const rocketY = gameSize.height - gameSize.height * 0.15 - rocketHeight;
+    const rocketX = rocketXRef.current;
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      y.set(y.get() + 2);
-      if (y.get() > document.body.clientHeight) {
-        x.set(Math.random() * document.body.clientWidth);
-        y.set(0);
+    setAsteroids(currentAsteroids => {
+      let newAsteroids = [...currentAsteroids];
+
+      // Spawn new asteroids
+      if (now >= nextAsteroidTimeRef.current && newAsteroids.length < 5) {
+        newAsteroids.push({
+          id: `asteroid-${now}`,
+          x: Math.random() * gameSize.width,
+          y: 0,
+        });
+        nextAsteroidTimeRef.current = now + 250 + Math.random() * 1000;
       }
-    }, 1);
 
-    return () => clearInterval(interval);
-  }, [x, y]);
+      // Update asteroid positions
+      newAsteroids = newAsteroids.map(asteroid => {
+        const newY = asteroid.y + 2;
+        if (newY > gameSize.height) {
+          return {
+            ...asteroid,
+            x: Math.random() * gameSize.width,
+            y: 0,
+          };
+        }
+        return { ...asteroid, y: newY };
+      });
+
+      // Check asteroid collisions
+      newAsteroids.forEach(asteroid => {
+        const asteroidSize = 80;
+        if (
+          asteroid.x < rocketX + rocketWidth &&
+          asteroid.x + asteroidSize > rocketX &&
+          asteroid.y < rocketY + rocketHeight &&
+          asteroid.y + asteroidSize > rocketY
+        ) {
+          onScoreChange(0);
+        }
+      });
+
+      return newAsteroids;
+    });
+
+    setStars(currentStars => {
+      let newStars = [...currentStars];
+
+      // Spawn new stars
+      if (now >= nextStarTimeRef.current && newStars.length < 10) {
+        newStars.push({
+          id: `star-${now}`,
+          x: Math.random() * gameSize.width,
+          y: 0,
+        });
+        nextStarTimeRef.current = now + 1000;
+      }
+
+      // Update star positions
+      newStars = newStars.map(star => {
+        const newY = star.y + 2;
+        if (newY > gameSize.height) {
+          return {
+            ...star,
+            x: Math.random() * gameSize.width,
+            y: 0,
+          };
+        }
+        return { ...star, y: newY };
+      });
+
+      // Check star collisions
+      const collectedStarIds: string[] = [];
+      newStars.forEach(star => {
+        const starSize = 40;
+        if (
+          star.x < rocketX + rocketWidth &&
+          star.x + starSize > rocketX &&
+          star.y < rocketY + rocketHeight &&
+          star.y + starSize > rocketY
+        ) {
+          collectedStarIds.push(star.id);
+          onStarCollected(star.x + starSize / 2, star.y + starSize / 2);
+          onScoreChange(prev => prev + 1);
+        }
+      });
+
+      if (collectedStarIds.length > 0) {
+        newStars = newStars.filter(star => !collectedStarIds.includes(star.id));
+      }
+
+      return newStars;
+    });
+  });
 
   return (
-    <motion.div
-      ref={innerRef}
-      style={{
-        position: 'absolute',
-        x,
-        y,
-        width: size,
-        height: size,
-      }}
-    >
-      <img 
-        src="/star.svg" 
-        alt="Star" 
-        style={{ width: '100%', height: '100%' }} 
+    <Container>
+      {/* Rocket */}
+      <Sprite
+        image="/spaceship.svg"
+        x={rocketXRef.current}
+        y={gameSize.height - gameSize.height * 0.15 - 60}
+        width={50}
+        height={60}
+        anchor={0}
       />
-    </motion.div>
+
+      {/* Asteroids */}
+      {asteroids.map(asteroid => (
+        <Sprite
+          key={asteroid.id}
+          image="/asteroid.svg"
+          x={asteroid.x}
+          y={asteroid.y}
+          width={80}
+          height={80}
+          anchor={0}
+        />
+      ))}
+
+      {/* Stars */}
+      {stars.map(star => (
+        <Sprite
+          key={star.id}
+          image="/star.svg"
+          x={star.x}
+          y={star.y}
+          width={40}
+          height={40}
+          anchor={0}
+        />
+      ))}
+    </Container>
   );
 }

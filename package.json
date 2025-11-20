@@ -13,9 +13,11 @@
   "dependencies": {
     "@mantine/core": "^7.2.2",
     "@mantine/hooks": "^7.2.2",
+    "@pixi/react": "^7.1.2",
     "@tanstack/react-router": "^1.136.18",
     "@tanstack/router-plugin": "^1.136.18",
     "framer-motion": "^10.16.12",
+    "pixi.js": "^8.7.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
