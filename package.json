@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "bunx --bun vite --host",
-    "build": "tsc && vite build",
+    "build": "vite build && tsc --noEmit",
     "start": "vite preview",
     "generate-pwa-assets": "pwa-assets-generator",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
@@ -14,7 +14,7 @@
     "@mantine/core": "^7.2.2",
     "@mantine/hooks": "^7.2.2",
     "@tanstack/react-router": "^1.136.18",
-    "@tanstack/router-vite-plugin": "^1.136.18",
+    "@tanstack/router-plugin": "^1.136.18",
     "framer-motion": "^10.16.12",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
