@@ -23,9 +23,14 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
+      sha-short: ${{ steps.sha.outputs.sha-short }}
     steps:
       - name: 🔄 Checkout
         uses: actions/checkout@v4
+
+      - name: 📝 Get short SHA
+        id: sha
+        run: echo "sha-short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -43,7 +48,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=ref,event=pr,prefix=pr-
+            type=sha,prefix=pr-${{ github.event.pull_request.number }}-
 
       - name: 🏗️ Build and push Docker image
         uses: docker/build-push-action@v5
@@ -85,11 +90,12 @@ jobs:
       - name: 🚀 Deploy review app with Helm
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          SHA_SHORT: ${{ needs.build.outputs.sha-short }}
         run: |
           helm upgrade --install kids-pr-${PR_NUMBER} ./helm/kids \
             --namespace kids \
             --set fullnameOverride=kids-pr-${PR_NUMBER} \
-            --set image.tag=pr-${PR_NUMBER} \
+            --set image.tag=pr-${PR_NUMBER}-${SHA_SHORT} \
             --set replicaCount=1 \
             --set ingress.hosts[0].host=pr-${PR_NUMBER}.kids.aiacta.com \
             --set ingress.hosts[0].paths[0].path=/ \
