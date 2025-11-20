@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Application, extend, useTick } from '@pixi/react';
-import { Container, Sprite, Texture, Assets } from 'pixi.js';
+import { Container, Sprite, Texture, Assets, Text } from 'pixi.js';
 
 // Register PixiJS components for use in JSX
-extend({ Container, Sprite });
+extend({ Container, Sprite, Text });
 
 interface GameObject {
   id: string;
@@ -12,11 +12,9 @@ interface GameObject {
 }
 
 export function AsteroidsGame() {
-  
-  
   const [gameSize, setGameSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [texturesLoaded, setTexturesLoaded] = useState(false);
-  
+  const rocketXRef = useRef(window.innerWidth / 2);
 
   // Load textures
   useEffect(() => {
@@ -36,21 +34,47 @@ export function AsteroidsGame() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handlePointerMove = (evt: PointerEvent) => {
+      const rocketWidth = 50;
+      const xPadding = 50;
+      rocketXRef.current = Math.min(
+        gameSize.width - xPadding - rocketWidth / 2,
+        Math.max(xPadding - rocketWidth / 2, evt.clientX - rocketWidth / 2)
+      );
+    };
 
+    const handleTouchMove = (evt: TouchEvent) => {
+      if (evt.touches.length > 0) {
+        const touch = evt.touches[0];
+        handlePointerMove({ clientX: touch.clientX } as PointerEvent);
+      }
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('touchmove', handleTouchMove);
+    
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [gameSize.width]);
+
+  const ref = useRef<HTMLDivElement>(null);
 
   if (!texturesLoaded) {
     return <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', background: 'black' }} />;
   }
 
   return (
-    <div ref={ref}style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', }}>
+    <div ref={ref} style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh' }}>
       <Application
-      resizeTo={ref}
+        resizeTo={ref}
         backgroundAlpha={0}
       >
         <GameScene
           gameSize={gameSize}
+          rocketXRef={rocketXRef}
         />
       </Application>
     </div>
@@ -58,16 +82,19 @@ export function AsteroidsGame() {
 }
 
 interface GameSceneProps {
- gameSize: { width: number; height: number };
+  gameSize: { width: number; height: number };
+  rocketXRef: React.MutableRefObject<number>;
 }
 
 function GameScene({
   gameSize,
-}:GameSceneProps) {
+  rocketXRef,
+}: GameSceneProps) {
   const [asteroids, setAsteroids] = useState<GameObject[]>([
     { id: '1', x: Math.random() * window.innerWidth, y: 0 }
   ]);
   const [stars, setStars] = useState<GameObject[]>([]);
+  const [score, setScore] = useState(0);
   
   const nextStarTimeRef = useRef(Date.now() + 1000);
   const nextAsteroidTimeRef = useRef(Date.now() + 250 + Math.random() * 1000);
@@ -77,7 +104,7 @@ function GameScene({
     const rocketWidth = 50;
     const rocketHeight = 60;
     const rocketY = gameSize.height - gameSize.height * 0.15 - rocketHeight;
-    const rocketX = 0;
+    const rocketX = rocketXRef.current;
 
     setAsteroids(currentAsteroids => {
       let newAsteroids = [...currentAsteroids];
@@ -114,7 +141,7 @@ function GameScene({
           asteroid.y < rocketY + rocketHeight &&
           asteroid.y + asteroidSize > rocketY
         ) {
-          // todo reset score
+          setScore(0);
         }
       });
 
@@ -158,8 +185,7 @@ function GameScene({
           star.y + starSize > rocketY
         ) {
           collectedStarIds.push(star.id);
-          // todo handle star collected
-          // todo handle score change
+          setScore(prev => prev + 1);
         }
       });
 
@@ -173,10 +199,31 @@ function GameScene({
 
   return (
     <pixiContainer>
+      {/* Score Display */}
+      <pixiText
+        text={`Score: ${score}`}
+        x={gameSize.width / 2}
+        y={50}
+        anchor={{ x: 0.5, y: 0.5 }}
+        style={{
+          fontFamily: 'Arial',
+          fontSize: 48,
+          fontWeight: 'bold',
+          fill: '#ffff00',
+          dropShadow: {
+            alpha: 0.8,
+            angle: 45,
+            blur: 4,
+            color: '#000000',
+            distance: 5,
+          },
+        }}
+      />
+
       {/* Rocket */}
       <pixiSprite
         texture={Texture.from('/spaceship.svg')}
-        x={0}
+        x={rocketXRef.current}
         y={gameSize.height - gameSize.height * 0.15 - 60}
         width={50}
         height={60}
