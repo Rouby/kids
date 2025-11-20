@@ -46,6 +46,16 @@ export function Dashboard({ onSelectApp }: DashboardProps) {
               🇩🇪 Deutsche Bundesländer
             </Button>
 
+            <Button
+              size="xl"
+              variant="filled"
+              color="violet"
+              onClick={() => onSelectApp('clock')}
+              style={{ fontSize: '1.5rem', height: 80 }}
+            >
+              🕐 Uhr Lernen
+            </Button>
+
             {/* Placeholder for future apps */}
             <Button
               size="xl"
