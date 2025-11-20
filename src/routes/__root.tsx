@@ -15,7 +15,7 @@ function RootComponent() {
   return (
     <MantineProvider theme={theme}>
       <Outlet />
-      <TanStackRouterDevtools />
+      {import.meta.env.DEV && <TanStackRouterDevtools position="top-right" />}
     </MantineProvider>
   );
 }
