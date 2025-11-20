@@ -27,14 +27,20 @@ export function AsteroidsGame() {
     return saved ? parseInt(saved, 10) : 0;
   });
   const rocketXRef = useRef(window.innerWidth / 2);
+  const collectStarSoundRef = useRef<HTMLAudioElement | null>(null);
+  const collisionSoundRef = useRef<HTMLAudioElement | null>(null);
 
-  // Load textures
+  // Load textures and sounds
   useEffect(() => {
     const loadTextures = async () => {
       await Assets.load(['/spaceship.svg', '/asteroid.svg', '/star.svg']);
       setTexturesLoaded(true);
     };
     loadTextures();
+
+    // Load sound effects
+    collectStarSoundRef.current = new Audio('/collect-star.mp3');
+    collisionSoundRef.current = new Audio('/collision.mp3');
   }, []);
 
   useEffect(() => {
@@ -92,6 +98,8 @@ export function AsteroidsGame() {
           setGameOver={setGameOver}
           highScore={highScore}
           setHighScore={setHighScore}
+          collectStarSoundRef={collectStarSoundRef}
+          collisionSoundRef={collisionSoundRef}
         />
       </Application>
     </div>
@@ -105,6 +113,8 @@ interface GameSceneProps {
   setGameOver: (gameOver: boolean) => void;
   highScore: number;
   setHighScore: (score: number) => void;
+  collectStarSoundRef: React.MutableRefObject<HTMLAudioElement | null>;
+  collisionSoundRef: React.MutableRefObject<HTMLAudioElement | null>;
 }
 
 function GameScene({
@@ -114,6 +124,8 @@ function GameScene({
   setGameOver,
   highScore,
   setHighScore,
+  collectStarSoundRef,
+  collisionSoundRef,
 }: GameSceneProps) {
   const [asteroids, setAsteroids] = useState<GameObject[]>([
     { id: '1', x: Math.random() * window.innerWidth, y: 0 }
@@ -206,6 +218,13 @@ function GameScene({
           asteroid.y + asteroidSize > rocketY
         ) {
           setGameOver(true);
+          // Play collision sound
+          if (collisionSoundRef.current) {
+            collisionSoundRef.current.currentTime = 0;
+            collisionSoundRef.current.play().catch(() => {
+              // Ignore errors if sound can't play
+            });
+          }
         }
       });
 
@@ -255,6 +274,13 @@ function GameScene({
 
       if (collectedStarIds.length > 0) {
         newStars = newStars.filter(star => !collectedStarIds.includes(star.id));
+        // Play collect star sound
+        if (collectStarSoundRef.current) {
+          collectStarSoundRef.current.currentTime = 0;
+          collectStarSoundRef.current.play().catch(() => {
+            // Ignore errors if sound can't play
+          });
+        }
       }
 
       return newStars;
