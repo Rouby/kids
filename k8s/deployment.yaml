@@ -14,9 +14,13 @@ spec:
     metadata:
       labels:
         app: kids
+      annotations:
+        # This annotation is updated automatically by CI/CD with the git SHA
+        deployment.kubernetes.io/revision-sha: "unknown"
     spec:
       containers:
       - name: kids
+        # Image tag is set by CI/CD to main-{SHA} for production deployments
         image: ghcr.io/rouby/kids:latest
         ports:
         - containerPort: 80

@@ -24,9 +24,16 @@ jobs:
   build:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
+    outputs:
+      sha-short: ${{ steps.sha.outputs.sha-short }}
+      image-tag: ${{ steps.sha.outputs.sha-short }}
     steps:
       - name: 🔄 Checkout
         uses: actions/checkout@v4
+
+      - name: 📝 Get short SHA
+        id: sha
+        run: echo "sha-short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -55,6 +62,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_SHA=${{ steps.sha.outputs.sha-short }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -85,10 +94,13 @@ jobs:
           kubectl apply -f k8s/namespace.yaml
 
       - name: 🚀 Deploy with Helm
+        env:
+          SHA_SHORT: ${{ needs.build.outputs.sha-short }}
         run: |
           helm upgrade --install kids ./helm/kids \
             --namespace kids \
-            --set image.tag=latest \
+            --set image.tag=main-${SHA_SHORT} \
+            --set deployment.annotations."deployment\.kubernetes\.io/revision-sha"=${SHA_SHORT} \
             --wait \
             --timeout 5m
 

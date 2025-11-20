@@ -58,6 +58,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_SHA=${{ steps.sha.outputs.sha-short }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -97,6 +99,7 @@ jobs:
             --set fullnameOverride=kids-pr-${PR_NUMBER} \
             --set image.tag=pr-${PR_NUMBER}-${SHA_SHORT} \
             --set replicaCount=1 \
+            --set deployment.annotations."deployment\.kubernetes\.io/revision-sha"=${SHA_SHORT} \
             --set ingress.hosts[0].host=pr-${PR_NUMBER}.kids.aiacta.com \
             --set ingress.hosts[0].paths[0].path=/ \
             --set ingress.hosts[0].paths[0].pathType=Prefix \
