@@ -32,7 +32,7 @@ jobs:
 
       - name: 🚀 Start preview server
         run: |
-          bun run start
+          bun run start &
           echo $! > preview.pid
 
           # Wait for server to be ready
