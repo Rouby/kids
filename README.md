@@ -37,7 +37,7 @@ This application is deployed to Kubernetes at [https://kids.aiacta.com](https://
 
 The deployment process is automated through GitHub Actions:
 
-1. **Build**: A multi-stage Docker image is built using Node.js and nginx
+1. **Build**: A multi-stage Docker image is built using Bun and nginx
 2. **Push**: The image is pushed to GitHub Container Registry (ghcr.io)
 3. **Deploy**: A self-hosted runner deploys the application to the Kubernetes cluster
 
@@ -98,19 +98,19 @@ helm upgrade --install kids-pr-${PR_NUMBER} ./helm/kids \
 
 ```bash
 # Install dependencies
-npm install
+bun install
 
 # Start development server
-npm run dev
+bun run dev
 
 # Build for production
-npm run build
+bun run build
 
 # Preview production build
-npm start
+bun run start
 
 # Run linter
-npm run lint
+bun run lint
 ```
 
 ### Adding New Games/Routes
@@ -125,6 +125,7 @@ npm run lint
 - **React** - UI library
 - **TypeScript** - Type safety
 - **Vite** - Build tool and dev server
+- **Bun** - JavaScript runtime and package manager
 - **TanStack Router** - File-based routing
 - **Mantine** - UI component library
 - **Framer Motion** - Animations
