@@ -15,6 +15,10 @@ spec:
     metadata:
       labels:
         app: {{ $name }}
+      {{- with .Values.deployment.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
       containers:
       - name: {{ .Chart.Name }}

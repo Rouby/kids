@@ -6,13 +6,21 @@ This template provides a minimal setup to get React working in Vite with HMR and
 
 This application is deployed to Kubernetes at [https://kids.aiacta.com](https://kids.aiacta.com).
 
+All deployments use git SHA-based versioning to ensure specific versions are always deployed.
+
 ### Production Deployment
 
 The deployment process is automated through GitHub Actions:
 
 1. **Build**: A multi-stage Docker image is built using Bun and nginx
-2. **Push**: The image is pushed to GitHub Container Registry (ghcr.io)
+   - Git SHA is embedded in the image as a build argument and label
+   - Git SHA is stored in `/usr/share/nginx/html/version.txt` for runtime access
+2. **Push**: The image is pushed to GitHub Container Registry (ghcr.io) with tags:
+   - `latest` tag for the most recent main branch build
+   - `main-{SHA}` tag for the specific commit
 3. **Deploy**: A self-hosted runner deploys the application to the Kubernetes cluster
+   - Uses the `main-{SHA}` tag to ensure a specific version is deployed
+   - Adds deployment annotation with the git SHA for tracking
 
 ### PR Review Apps
 
@@ -38,24 +46,35 @@ All resources are deployed to the `kids` namespace using Helm:
 To manually deploy changes:
 
 ```bash
-# Build and push the Docker image
-docker build -t ghcr.io/rouby/kids:latest .
+# Get the current git SHA
+GIT_SHA=$(git rev-parse --short HEAD)
+
+# Build and push the Docker image with git SHA
+docker build --build-arg GIT_SHA=${GIT_SHA} -t ghcr.io/rouby/kids:main-${GIT_SHA} .
+docker tag ghcr.io/rouby/kids:main-${GIT_SHA} ghcr.io/rouby/kids:latest
+docker push ghcr.io/rouby/kids:main-${GIT_SHA}
 docker push ghcr.io/rouby/kids:latest
 
 # Deploy with Helm (requires kubectl and helm)
 helm upgrade --install kids ./helm/kids \
   --namespace kids \
   --create-namespace \
-  --set image.tag=latest \
+  --set image.tag=main-${GIT_SHA} \
+  --set deployment.annotations."deployment\.kubernetes\.io/revision-sha"=${GIT_SHA} \
   --wait
 
 # Deploy a PR review app manually
 PR_NUMBER=42
+GIT_SHA=$(git rev-parse --short HEAD)
+docker build --build-arg GIT_SHA=${GIT_SHA} -t ghcr.io/rouby/kids:pr-${PR_NUMBER}-${GIT_SHA} .
+docker push ghcr.io/rouby/kids:pr-${PR_NUMBER}-${GIT_SHA}
+
 helm upgrade --install kids-pr-${PR_NUMBER} ./helm/kids \
   --namespace kids \
   --create-namespace \
   --set fullnameOverride=kids-pr-${PR_NUMBER} \
-  --set image.tag=pr-${PR_NUMBER} \
+  --set image.tag=pr-${PR_NUMBER}-${GIT_SHA} \
+  --set deployment.annotations."deployment\.kubernetes\.io/revision-sha"=${GIT_SHA} \
   --set replicaCount=1 \
   --set ingress.hosts[0].host=pr-${PR_NUMBER}.kids.aiacta.com \
   --set ingress.hosts[0].paths[0].path=/ \
@@ -64,6 +83,14 @@ helm upgrade --install kids-pr-${PR_NUMBER} ./helm/kids \
   --set ingress.tls[0].hosts[0]=pr-${PR_NUMBER}.kids.aiacta.com \
   --wait
 ```
+
+### Version Information
+
+The deployed git SHA can be accessed at runtime:
+- In the container: `cat /usr/share/nginx/html/version.txt`
+- Via HTTP: `https://kids.aiacta.com/version.txt`
+- Docker image label: `git.sha`
+- Deployment pod annotation: `deployment.kubernetes.io/revision-sha`
 
 ## Development
 

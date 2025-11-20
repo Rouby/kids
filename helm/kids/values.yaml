@@ -14,6 +14,10 @@ image:
 # Deployment configuration
 replicaCount: 2
 
+# Deployment annotations (for tracking git SHA, etc.)
+deployment:
+  annotations: {}
+
 # Service configuration
 service:
   type: ClusterIP
