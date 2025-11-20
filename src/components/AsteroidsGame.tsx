@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Application, extend, useTick } from '@pixi/react';
-import { Container, Sprite, Texture, Assets, Text } from 'pixi.js';
+import { Container, Sprite, Texture, Assets, Text, Graphics } from 'pixi.js';
 
 // Register PixiJS components for use in JSX
-extend({ Container, Sprite, Text });
+extend({ Container, Sprite, Text, Graphics });
 
 interface GameObject {
   id: string;
@@ -11,9 +11,21 @@ interface GameObject {
   y: number;
 }
 
+interface Star {
+  x: number;
+  y: number;
+  size: number;
+  alpha: number;
+}
+
 export function AsteroidsGame() {
   const [gameSize, setGameSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [texturesLoaded, setTexturesLoaded] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [highScore, setHighScore] = useState(() => {
+    const saved = localStorage.getItem('asteroidsHighScore');
+    return saved ? parseInt(saved, 10) : 0;
+  });
   const rocketXRef = useRef(window.innerWidth / 2);
 
   // Load textures
@@ -63,18 +75,23 @@ export function AsteroidsGame() {
   const ref = useRef<HTMLDivElement>(null);
 
   if (!texturesLoaded) {
-    return <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', background: 'black' }} />;
+    return <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', background: '#000814' }} />;
   }
 
   return (
-    <div ref={ref} style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh' }}>
+    <div ref={ref} style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', background: '#000814' }}>
       <Application
         resizeTo={ref}
-        backgroundAlpha={0}
+        backgroundAlpha={1}
+        background={0x000814}
       >
         <GameScene
           gameSize={gameSize}
           rocketXRef={rocketXRef}
+          gameOver={gameOver}
+          setGameOver={setGameOver}
+          highScore={highScore}
+          setHighScore={setHighScore}
         />
       </Application>
     </div>
@@ -84,27 +101,74 @@ export function AsteroidsGame() {
 interface GameSceneProps {
   gameSize: { width: number; height: number };
   rocketXRef: React.MutableRefObject<number>;
+  gameOver: boolean;
+  setGameOver: (gameOver: boolean) => void;
+  highScore: number;
+  setHighScore: (score: number) => void;
 }
 
 function GameScene({
   gameSize,
   rocketXRef,
+  gameOver,
+  setGameOver,
+  highScore,
+  setHighScore,
 }: GameSceneProps) {
   const [asteroids, setAsteroids] = useState<GameObject[]>([
     { id: '1', x: Math.random() * window.innerWidth, y: 0 }
   ]);
   const [stars, setStars] = useState<GameObject[]>([]);
   const [score, setScore] = useState(0);
+  const [backgroundStars, setBackgroundStars] = useState<Star[]>([]);
   
   const nextStarTimeRef = useRef(Date.now() + 1000);
   const nextAsteroidTimeRef = useRef(Date.now() + 250 + Math.random() * 1000);
 
+  // Generate background stars
+  useEffect(() => {
+    const newStars: Star[] = [];
+    for (let i = 0; i < 100; i++) {
+      newStars.push({
+        x: Math.random() * gameSize.width,
+        y: Math.random() * gameSize.height,
+        size: Math.random() * 2 + 1,
+        alpha: Math.random() * 0.5 + 0.3,
+      });
+    }
+    setBackgroundStars(newStars);
+  }, [gameSize]);
+
+  // Update high score when score changes
+  useEffect(() => {
+    if (score > highScore) {
+      setHighScore(score);
+      localStorage.setItem('asteroidsHighScore', score.toString());
+    }
+  }, [score, highScore, setHighScore]);
+
+  const resetGame = () => {
+    setScore(0);
+    setGameOver(false);
+    setAsteroids([{ id: '1', x: Math.random() * gameSize.width, y: 0 }]);
+    setStars([]);
+    nextStarTimeRef.current = Date.now() + 1000;
+    nextAsteroidTimeRef.current = Date.now() + 250 + Math.random() * 1000;
+  };
+
   useTick(() => {
+    if (gameOver) return; // Don't update if game is over
+    
     const now = Date.now();
     const rocketWidth = 50;
     const rocketHeight = 60;
     const rocketY = gameSize.height - gameSize.height * 0.15 - rocketHeight;
     const rocketX = rocketXRef.current;
+
+    // Difficulty progression: speed increases with score
+    const baseSpeed = 2;
+    const speedMultiplier = 1 + Math.floor(score / 10) * 0.1; // +10% every 10 points
+    const gameSpeed = baseSpeed * speedMultiplier;
 
     setAsteroids(currentAsteroids => {
       let newAsteroids = [...currentAsteroids];
@@ -119,9 +183,9 @@ function GameScene({
         nextAsteroidTimeRef.current = now + 250 + Math.random() * 1000;
       }
 
-      // Update asteroid positions
+      // Update asteroid positions with difficulty scaling
       newAsteroids = newAsteroids.map(asteroid => {
-        const newY = asteroid.y + 2;
+        const newY = asteroid.y + gameSpeed;
         if (newY > gameSize.height) {
           return {
             ...asteroid,
@@ -141,7 +205,7 @@ function GameScene({
           asteroid.y < rocketY + rocketHeight &&
           asteroid.y + asteroidSize > rocketY
         ) {
-          setScore(0);
+          setGameOver(true);
         }
       });
 
@@ -161,9 +225,9 @@ function GameScene({
         nextStarTimeRef.current = now + 1000;
       }
 
-      // Update star positions
+      // Update star positions with difficulty scaling
       newStars = newStars.map(star => {
-        const newY = star.y + 2;
+        const newY = star.y + gameSpeed;
         if (newY > gameSize.height) {
           return {
             ...star,
@@ -199,6 +263,18 @@ function GameScene({
 
   return (
     <pixiContainer>
+      {/* Background Stars */}
+      {backgroundStars.map((star, index) => (
+        <pixiGraphics
+          key={`bg-star-${index}`}
+          draw={(g) => {
+            g.clear();
+            g.circle(star.x, star.y, star.size);
+            g.fill({ color: 0xFFFFFF, alpha: star.alpha });
+          }}
+        />
+      ))}
+
       {/* Score Display */}
       <pixiText
         text={`Score: ${score}`}
@@ -220,6 +296,27 @@ function GameScene({
         }}
       />
 
+      {/* High Score Display */}
+      <pixiText
+        text={`High Score: ${highScore}`}
+        x={gameSize.width / 2}
+        y={100}
+        anchor={{ x: 0.5, y: 0.5 }}
+        style={{
+          fontFamily: 'Arial',
+          fontSize: 32,
+          fontWeight: 'bold',
+          fill: '#00ffff',
+          dropShadow: {
+            alpha: 0.6,
+            angle: 45,
+            blur: 3,
+            color: '#000000',
+            distance: 3,
+          },
+        }}
+      />
+
       {/* Rocket */}
       <pixiSprite
         texture={Texture.from('/spaceship.svg')}
@@ -227,6 +324,7 @@ function GameScene({
         y={gameSize.height - gameSize.height * 0.15 - 60}
         width={50}
         height={60}
+        alpha={gameOver ? 0.5 : 1}
       />
 
       {/* Asteroids */}
@@ -252,6 +350,86 @@ function GameScene({
           height={40}
         />
       ))}
+
+      {/* Game Over Overlay */}
+      {gameOver && (
+        <>
+          {/* Semi-transparent background */}
+          <pixiGraphics
+            draw={(g) => {
+              g.clear();
+              g.rect(0, 0, gameSize.width, gameSize.height);
+              g.fill({ color: 0x000000, alpha: 0.7 });
+            }}
+          />
+          
+          {/* Game Over Text */}
+          <pixiText
+            text="GAME OVER"
+            x={gameSize.width / 2}
+            y={gameSize.height / 2 - 100}
+            anchor={{ x: 0.5, y: 0.5 }}
+            style={{
+              fontFamily: 'Arial',
+              fontSize: 72,
+              fontWeight: 'bold',
+              fill: '#ff0000',
+              dropShadow: {
+                alpha: 0.8,
+                angle: 45,
+                blur: 6,
+                color: '#000000',
+                distance: 8,
+              },
+            }}
+          />
+
+          {/* Final Score */}
+          <pixiText
+            text={`Final Score: ${score}`}
+            x={gameSize.width / 2}
+            y={gameSize.height / 2}
+            anchor={{ x: 0.5, y: 0.5 }}
+            style={{
+              fontFamily: 'Arial',
+              fontSize: 48,
+              fontWeight: 'bold',
+              fill: '#ffffff',
+              dropShadow: {
+                alpha: 0.8,
+                angle: 45,
+                blur: 4,
+                color: '#000000',
+                distance: 5,
+              },
+            }}
+          />
+
+          {/* Restart Instructions */}
+          <pixiText
+            text="Click anywhere to restart"
+            x={gameSize.width / 2}
+            y={gameSize.height / 2 + 80}
+            anchor={{ x: 0.5, y: 0.5 }}
+            style={{
+              fontFamily: 'Arial',
+              fontSize: 36,
+              fontWeight: 'normal',
+              fill: '#00ff00',
+              dropShadow: {
+                alpha: 0.6,
+                angle: 45,
+                blur: 3,
+                color: '#000000',
+                distance: 4,
+              },
+            }}
+            eventMode="static"
+            cursor="pointer"
+            onPointerDown={resetGame}
+          />
+        </>
+      )}
     </pixiContainer>
   );
 }
