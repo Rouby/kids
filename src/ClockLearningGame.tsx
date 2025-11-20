@@ -105,10 +105,7 @@ function AnalogClock({ hours, minutes, size = 300 }: AnalogClockProps) {
         stroke="#333"
         strokeWidth={hourHandWidth}
         strokeLinecap="round"
-        initial={{ rotate: 0 }}
-        animate={{ rotate: hourAngle }}
-        transition={{ type: 'spring', stiffness: 100, damping: 15 }}
-        style={{ transformOrigin: `${centerX}px ${centerY}px` }}
+        transform={`rotate(${hourAngle} ${centerX} ${centerY})`}
       />
       
       {/* Minute hand */}
@@ -120,10 +117,7 @@ function AnalogClock({ hours, minutes, size = 300 }: AnalogClockProps) {
         stroke="#1c7ed6"
         strokeWidth={minuteHandWidth}
         strokeLinecap="round"
-        initial={{ rotate: 0 }}
-        animate={{ rotate: minuteAngle }}
-        transition={{ type: 'spring', stiffness: 100, damping: 15 }}
-        style={{ transformOrigin: `${centerX}px ${centerY}px` }}
+        transform={`rotate(${minuteAngle} ${centerX} ${centerY})`}
       />
       
       {/* Center dot */}
