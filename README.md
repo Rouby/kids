@@ -1,6 +1,33 @@
-# React + TypeScript + Vite
+# Kids App - React + TypeScript + Vite + TanStack Router
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is an educational kids app built with React, TypeScript, Vite, and TanStack Router for file-based routing.
+
+## Features
+
+- 🎮 Multiple educational games (Asteroids, German States, Clock Learning)
+- 🧭 File-based routing with TanStack Router for better scalability
+- 📱 PWA support with offline capabilities
+- 🎨 Mantine UI components
+- ⚡ Fast development with Vite and HMR
+
+## Architecture
+
+The app uses TanStack Router for file-based routing, which provides:
+- Type-safe routing
+- Automatic code splitting
+- Easy addition of new games/routes
+- Better developer experience with route generation
+
+### Route Structure
+
+Routes are defined in `src/routes/`:
+- `__root.tsx` - Root layout with Mantine provider
+- `index.tsx` - Dashboard/home page
+- `asteroids.tsx` - Asteroids game
+- `germanstates.tsx` - German States game
+- `clock.tsx` - Clock learning game
+
+Game components are in `src/components/`.
 
 ## Deployment
 
@@ -10,7 +37,7 @@ This application is deployed to Kubernetes at [https://kids.aiacta.com](https://
 
 The deployment process is automated through GitHub Actions:
 
-1. **Build**: A multi-stage Docker image is built using Bun and nginx
+1. **Build**: A multi-stage Docker image is built using Node.js and nginx
 2. **Push**: The image is pushed to GitHub Container Registry (ghcr.io)
 3. **Deploy**: A self-hosted runner deploys the application to the Kubernetes cluster
 
@@ -67,10 +94,41 @@ helm upgrade --install kids-pr-${PR_NUMBER} ./helm/kids \
 
 ## Development
 
-Currently, two official plugins are available:
+### Getting Started
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm start
+
+# Run linter
+npm run lint
+```
+
+### Adding New Games/Routes
+
+1. Create a new component in `src/components/` (e.g., `NewGame.tsx`)
+2. Create a new route file in `src/routes/` (e.g., `newgame.tsx`)
+3. Add a link to the game in `src/routes/index.tsx` (Dashboard)
+4. TanStack Router will automatically generate the route tree
+
+### Technology Stack
+
+- **React** - UI library
+- **TypeScript** - Type safety
+- **Vite** - Build tool and dev server
+- **TanStack Router** - File-based routing
+- **Mantine** - UI component library
+- **Framer Motion** - Animations
+- **Vite PWA Plugin** - Progressive Web App support
 
 ## Expanding the ESLint configuration
 
