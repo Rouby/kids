@@ -1,6 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Stage, Container, Sprite, useTick } from '@pixi/react';
+import { Application, extend, useTick } from '@pixi/react';
+import { Container, Sprite, Texture, Assets } from 'pixi.js';
+
+// Register PixiJS components for use in JSX
+extend({ Container, Sprite });
 
 interface GameObject {
   id: string;
@@ -12,8 +16,18 @@ export function AsteroidsGame() {
   const [score, setScore] = useState(0);
   const [collectedStarPosition, setCollectedStarPosition] = useState<{ x: number; y: number } | null>(null);
   const [gameSize, setGameSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const [texturesLoaded, setTexturesLoaded] = useState(false);
   
   const rocketXRef = useRef(window.innerWidth / 2);
+
+  // Load textures
+  useEffect(() => {
+    const loadTextures = async () => {
+      await Assets.load(['/spaceship.svg', '/asteroid.svg', '/star.svg']);
+      setTexturesLoaded(true);
+    };
+    loadTextures();
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -45,6 +59,10 @@ export function AsteroidsGame() {
   const handleStarCollected = useCallback((x: number, y: number) => {
     setCollectedStarPosition({ x, y });
   }, []);
+
+  if (!texturesLoaded) {
+    return <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'black' }} />;
+  }
 
   return (
     <>
@@ -153,10 +171,10 @@ export function AsteroidsGame() {
         )}
       </AnimatePresence>
 
-      <Stage 
-        width={gameSize.width} 
+      <Application
+        width={gameSize.width}
         height={gameSize.height}
-        options={{ backgroundColor: 0x000000, antialias: true }}
+        backgroundAlpha={0}
       >
         <GameScene
           gameSize={gameSize}
@@ -164,7 +182,7 @@ export function AsteroidsGame() {
           onScoreChange={handleScoreChange}
           onStarCollected={handleStarCollected}
         />
-      </Stage>
+      </Application>
     </>
   );
 }
@@ -290,42 +308,39 @@ function GameScene({
   });
 
   return (
-    <Container>
+    <pixiContainer>
       {/* Rocket */}
-      <Sprite
-        image="/spaceship.svg"
+      <pixiSprite
+        texture={Texture.from('/spaceship.svg')}
         x={rocketXRef.current}
         y={gameSize.height - gameSize.height * 0.15 - 60}
         width={50}
         height={60}
-        anchor={0}
       />
 
       {/* Asteroids */}
       {asteroids.map(asteroid => (
-        <Sprite
+        <pixiSprite
           key={asteroid.id}
-          image="/asteroid.svg"
+          texture={Texture.from('/asteroid.svg')}
           x={asteroid.x}
           y={asteroid.y}
           width={80}
           height={80}
-          anchor={0}
         />
       ))}
 
       {/* Stars */}
       {stars.map(star => (
-        <Sprite
+        <pixiSprite
           key={star.id}
-          image="/star.svg"
+          texture={Texture.from('/star.svg')}
           x={star.x}
           y={star.y}
           width={40}
           height={40}
-          anchor={0}
         />
       ))}
-    </Container>
+    </pixiContainer>
   );
 }
