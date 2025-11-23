@@ -59,6 +59,17 @@ function Dashboard() {
             >
               🕐 Uhr Lernen
             </Button>
+
+            <Button
+              component={Link}
+              to="/geometricforms"
+              size="xl"
+              variant="filled"
+              color="pink"
+              style={{ fontSize: '1.5rem', height: 80 }}
+            >
+              🔷 Geometrische Formen
+            </Button>
           </Stack>
         </Stack>
       </Container>
