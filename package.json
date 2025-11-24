@@ -24,7 +24,6 @@
     "@tanstack/router-plugin": "^1.136.18",
     "@trpc/client": "^11.7.2",
     "@trpc/server": "^11.7.2",
-    "better-sqlite3": "^11.10.0",
     "drizzle-orm": "^0.44.7",
     "framer-motion": "^10.16.12",
     "pixi.js": "^8.7.2",
