@@ -22,6 +22,7 @@ deployment:
 service:
   type: ClusterIP
   port: 80
+  containerPort: 3000
 
 # Ingress configuration
 ingress:

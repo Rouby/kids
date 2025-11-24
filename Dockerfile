@@ -18,22 +18,33 @@ COPY . .
 RUN bun run build
 
 # Production stage
-FROM nginx:alpine
+FROM oven/bun:1
 
 ARG GIT_SHA=unknown
 LABEL git.sha="${GIT_SHA}"
 
-# Copy built assets from builder
-COPY --from=builder /app/dist /usr/share/nginx/html
+WORKDIR /app
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy package files for production dependencies
+COPY package.json bun.lock ./
+
+# Install production dependencies only
+RUN bun install --frozen-lockfile --production
+
+# Copy built assets from builder
+COPY --from=builder /app/dist ./dist
+
+# Copy server files
+COPY server ./server
+
+# Create data directory for SQLite database
+RUN mkdir -p /app/data
 
 # Store git SHA in a file for runtime access
-RUN echo "${GIT_SHA}" > /usr/share/nginx/html/version.txt
+RUN echo "${GIT_SHA}" > /app/dist/version.txt
 
-# Expose port 80
-EXPOSE 80
+# Expose port 3000
+EXPOSE 3000
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start Bun server
+CMD ["bun", "run", "server/index.ts"]
