@@ -1,7 +1,11 @@
 import { RouterProvider, createRouter } from '@tanstack/react-router';
-import React from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createTRPCClient, httpBatchLink } from '@trpc/client';
+import type { AppRouter } from '../server/trpc/router';
+import { TRPCProvider, useTRPC } from './utils/trpc';
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen';
@@ -27,8 +31,29 @@ const updateSW = registerSW({
   },
 });
 
+function App() {
+  const [queryClient] = useState(() => new QueryClient());
+  const [trpcClient] = useState(() =>
+    createTRPCClient<AppRouter>({
+      links: [
+        httpBatchLink({
+          url: '/api/trpc',
+        }),
+      ],
+    }),
+  );
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+        <RouterProvider router={router} />
+      </TRPCProvider>
+    </QueryClientProvider>
+  );
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <App />
   </React.StrictMode>,
 );

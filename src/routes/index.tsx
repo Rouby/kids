@@ -1,34 +1,13 @@
 import { Button, Container, Stack, Title, Group, Text } from '@mantine/core';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
 
 export const Route = createFileRoute('/')({
   component: Dashboard,
 });
 
 function Dashboard() {
-  const [currentUser, setCurrentUser] = useState<{ username: string } | null>(null);
-
-  useEffect(() => {
-    try {
-      const userStr = localStorage.getItem('currentUser');
-      if (userStr) {
-        const parsed = JSON.parse(userStr);
-        // Validate the parsed data has expected shape
-        if (parsed && typeof parsed.username === 'string') {
-          setCurrentUser(parsed);
-        }
-      }
-    } catch (error) {
-      // Invalid JSON or other error, clear invalid data
-      localStorage.removeItem('currentUser');
-    }
-  }, []);
-
-  const handleSignOut = () => {
-    localStorage.removeItem('currentUser');
-    setCurrentUser(null);
-  };
+  const { user } = useAuth();
 
   return (
     <div
@@ -50,19 +29,19 @@ function Dashboard() {
             <Title order={1} size="h1" style={{ color: 'white', fontSize: '3rem' }}>
               Kids App Dashboard
             </Title>
-            {currentUser && (
+            {user && (
               <Group gap="sm">
                 <Text size="lg" style={{ color: 'white' }}>
-                  Willkommen, {currentUser.username}!
+                  Willkommen, {user.username}!
                 </Text>
-                <Button variant="light" color="white" size="xs" onClick={handleSignOut}>
-                  Abmelden
+                <Button component={Link} to="/settings" variant="light" color="white" size="xs">
+                  Einstellungen
                 </Button>
               </Group>
             )}
           </Stack>
 
-          {!currentUser && (
+          {!user && (
             <Group gap="md">
               <Button
                 component={Link}

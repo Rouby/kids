@@ -16,6 +16,9 @@ import type {
 } from '@simplewebauthn/types';
 import { isoBase64URL, isoUint8Array } from '@simplewebauthn/server/helpers';
 
+import { signJwt, verifyJwt } from '../utils/jwt';
+import { serialize, parse } from 'cookie';
+
 const rpName = 'Kids App';
 
 // Get RP ID and origin from environment or derive from a base URL
@@ -98,7 +101,7 @@ export const authRouter = router({
         response: z.any() as z.ZodType<RegistrationResponseJSON>,
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const [user] = await db
         .select()
         .from(users)
@@ -141,6 +144,21 @@ export const authRouter = router({
         .update(users)
         .set({ currentChallenge: null })
         .where(eq(users.id, user.id));
+
+      // Create JWT
+      const token = await signJwt({ userId: user.id, username: user.username });
+
+      // Set cookie
+      ctx.resHeaders.append(
+        'Set-Cookie',
+        serialize('auth_token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+        })
+      );
 
       return { verified: true, user };
     }),
@@ -196,7 +214,7 @@ export const authRouter = router({
         response: z.any() as z.ZodType<AuthenticationResponseJSON>,
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const [user] = await db
         .select()
         .from(users)
@@ -247,6 +265,58 @@ export const authRouter = router({
         .set({ currentChallenge: null })
         .where(eq(users.id, user.id));
 
+      // Create JWT
+      const token = await signJwt({ userId: user.id, username: user.username });
+
+      // Set cookie
+      ctx.resHeaders.append(
+        'Set-Cookie',
+        serialize('auth_token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+        })
+      );
+
       return { verified: true, user };
     }),
+
+  // Get current user
+  me: publicProcedure.query(async ({ ctx }) => {
+    const cookieHeader = ctx.req.headers.get('cookie');
+    if (!cookieHeader) return null;
+
+    const cookies = parse(cookieHeader);
+    const token = cookies['auth_token'];
+
+    if (!token) return null;
+
+    const payload = await verifyJwt(token);
+    if (!payload) return null;
+
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, payload.userId))
+      .limit(1);
+
+    return user || null;
+  }),
+
+  // Logout
+  logout: publicProcedure.mutation(({ ctx }) => {
+    ctx.resHeaders.append(
+      'Set-Cookie',
+      serialize('auth_token', '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: -1,
+      })
+    );
+    return { success: true };
+  }),
 });

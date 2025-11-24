@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button, Container, Stack, Title, TextInput, Text, Alert } from '@mantine/core';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { startRegistration } from '@simplewebauthn/browser';
-import { trpcClient } from '~/utils/trpc';
+import { useTRPCClient } from '~/utils/trpc';
 
 export const Route = createFileRoute('/signup')({
   component: SignupPage,
@@ -15,6 +15,7 @@ function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const trpcClient = useTRPCClient();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();

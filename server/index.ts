@@ -1,5 +1,6 @@
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { appRouter } from './trpc/router';
+import { createContext } from './trpc/context';
 import { join } from 'path';
 import { runMigrations } from './db/migrate';
 
@@ -20,7 +21,7 @@ Bun.serve({
         endpoint: '/api/trpc',
         req,
         router: appRouter,
-        createContext: () => ({}),
+        createContext,
       });
     }
 
