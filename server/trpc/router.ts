@@ -3,6 +3,7 @@ import { router, publicProcedure } from './trpc';
 import { db } from '../db';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
+import { authRouter } from './authRouter';
 
 // User management router
 const userRouter = router({
@@ -21,7 +22,7 @@ const userRouter = router({
     .input(
       z.object({
         username: z.string().min(3).max(50),
-        email: z.string().email(),
+        email: z.string().email().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -60,6 +61,9 @@ export const appRouter = router({
   health: publicProcedure.query(() => {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }),
+
+  // Authentication endpoints
+  auth: authRouter,
 
   // User management endpoints
   user: userRouter,

@@ -19,6 +19,8 @@
     "@mantine/core": "^7.2.2",
     "@mantine/hooks": "^7.2.2",
     "@pixi/react": "8.0.0-beta.16",
+    "@simplewebauthn/browser": "^10.0.0",
+    "@simplewebauthn/server": "^10.0.1",
     "@tanstack/react-query": "^5.90.10",
     "@tanstack/react-router": "^1.136.18",
     "@tanstack/router-plugin": "^1.136.18",
