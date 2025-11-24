@@ -1,14 +1,17 @@
 {
-  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "module": "esnext",
+    "composite": true,
+    "module": "ESNext",
     "moduleResolution": "bundler",
-    "target": "esnext",
-    "lib": ["esnext"],
-    "types": ["bun-types"]
+    "target": "ESNext",
+    "lib": ["ESNext"],
+    "types": ["bun-types"],
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
   },
-  "include": [
-    "**/*.ts",
-    "types/**/*.d.ts"
-  ]
+  "include": ["**/*.ts"]
 }

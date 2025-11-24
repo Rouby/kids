@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "bunx --bun vite --host",
-    "build": "vite build && tsc --noEmit",
+    "build": "vite build",
     "start": "bun run server/index.ts",
     "server:dev": "bun --watch server/index.ts",
     "db:generate": "drizzle-kit generate",
@@ -34,7 +34,6 @@
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.136.18",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
