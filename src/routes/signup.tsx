@@ -69,74 +69,76 @@ function SignupPage() {
             Sign Up
           </Title>
 
-          {success ? (
-            <Alert color="green" title="Success!">
-              Account created successfully! Redirecting to sign in...
-            </Alert>
-          ) : (
-            <form onSubmit={handleSignup}>
-              <Stack
-                gap="md"
-                style={{
-                  background: 'white',
-                  padding: '2rem',
-                  borderRadius: '12px',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                }}
-              >
-                <TextInput
-                  label="Username"
-                  placeholder="Enter your username"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.currentTarget.value)}
-                  size="lg"
-                />
+          <form onSubmit={handleSignup}>
+            <Stack
+              gap="md"
+              style={{
+                background: 'white',
+                padding: '2rem',
+                borderRadius: '12px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+              }}
+            >
+              {success ? (
+                <Alert color="green" title="Success!">
+                  Account created successfully! Redirecting to sign in...
+                </Alert>
+              ) : (
+                <>
+                  <TextInput
+                    label="Username"
+                    placeholder="Enter your username"
+                    required
+                    value={username}
+                    onChange={(e) => setUsername(e.currentTarget.value)}
+                    size="lg"
+                  />
 
-                <TextInput
-                  label="Email (optional)"
-                  placeholder="Enter your email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.currentTarget.value)}
-                  size="lg"
-                />
+                  <TextInput
+                    label="Email (optional)"
+                    placeholder="Enter your email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.currentTarget.value)}
+                    size="lg"
+                  />
 
-                {error && (
-                  <Alert color="red" title="Error">
-                    {error}
-                  </Alert>
-                )}
+                  {error && (
+                    <Alert color="red" title="Error">
+                      {error}
+                    </Alert>
+                  )}
 
-                <Text size="sm" c="dimmed">
-                  You'll use a passkey to sign in. Make sure your device supports passkeys (Face ID,
-                  Touch ID, Windows Hello, or security keys).
-                </Text>
+                  <Text size="sm" c="dimmed">
+                    You'll use a passkey to sign in. Make sure your device supports passkeys (Face ID,
+                    Touch ID, Windows Hello, or security keys).
+                  </Text>
 
-                <Button type="submit" size="lg" loading={loading} fullWidth>
-                  Create Account with Passkey
-                </Button>
+                  <Button type="submit" size="lg" loading={loading} fullWidth>
+                    Create Account with Passkey
+                  </Button>
 
-                <Button
-                  variant="subtle"
-                  size="md"
-                  onClick={() => navigate({ to: '/signin' })}
-                  disabled={loading}
-                >
-                  Already have an account? Sign In
-                </Button>
+                  <Button
+                    variant="subtle"
+                    size="md"
+                    onClick={() => navigate({ to: '/signin' })}
+                    disabled={loading}
+                  >
+                    Already have an account? Sign In
+                  </Button>
 
-                <Button
-                  variant="subtle"
-                  size="md"
-                  onClick={() => navigate({ to: '/' })}
-                  disabled={loading}
-                >
-                  Back to Home
-                </Button>
-              </Stack>
-            </form>
-          )}
+                  <Button
+                    variant="subtle"
+                    size="md"
+                    onClick={() => navigate({ to: '/' })}
+                    disabled={loading}
+                  >
+                    Back to Home
+                  </Button>
+                </>
+              )}
+            </Stack>
+          </form>
         </Stack>
       </Container>
     </div>

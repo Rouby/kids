@@ -13,6 +13,7 @@ import type {
   RegistrationResponseJSON,
   AuthenticationResponseJSON,
 } from '@simplewebauthn/types';
+import { isoBase64URL, isoUint8Array } from '@simplewebauthn/server/helpers';
 
 const rpName = 'Kids App';
 const rpID = process.env.RP_ID || 'localhost';
@@ -51,7 +52,7 @@ export const authRouter = router({
       const options = await generateRegistrationOptions({
         rpName,
         rpID,
-        userID: new Uint8Array(Buffer.from(user.id.toString())),
+        userID: isoUint8Array.fromUTF8String(user.id.toString()),
         userName: user.username,
         userDisplayName: user.username,
         attestationType: 'none',
@@ -103,11 +104,11 @@ export const authRouter = router({
       const { credentialPublicKey, credentialID, counter, credentialDeviceType, credentialBackedUp } =
         verification.registrationInfo;
 
-      // Store the authenticator
+      // Store the authenticator - credentialID is already a Uint8Array, convert to base64url string
       await db.insert(authenticators).values({
         userId: user.id,
-        credentialID: Buffer.from(credentialID).toString('base64'),
-        credentialPublicKey: Buffer.from(credentialPublicKey).toString('base64'),
+        credentialID: isoBase64URL.fromBuffer(credentialID),
+        credentialPublicKey: isoBase64URL.fromBuffer(credentialPublicKey),
         counter,
         credentialDeviceType,
         credentialBackedUp,
@@ -150,8 +151,8 @@ export const authRouter = router({
       const options = await generateAuthenticationOptions({
         rpID,
         allowCredentials: userAuthenticators.map((auth) => ({
-          id: Buffer.from(auth.credentialID, 'base64'),
-          type: 'public-key',
+          id: isoBase64URL.toBuffer(auth.credentialID),
+          type: 'public-key' as const,
           transports: auth.transports?.split(',') as AuthenticatorTransport[] | undefined,
         })),
         userVerification: 'preferred',
@@ -185,14 +186,11 @@ export const authRouter = router({
         throw new Error('User not found or no challenge');
       }
 
-      // Get the authenticator by converting the base64url id to base64
-      const credentialIdBuffer = Buffer.from(input.response.id, 'base64url');
-      const credentialIdBase64 = credentialIdBuffer.toString('base64');
-      
+      // Get the authenticator - response.id is base64url string from the client
       const [authenticator] = await db
         .select()
         .from(authenticators)
-        .where(eq(authenticators.credentialID, credentialIdBase64))
+        .where(eq(authenticators.credentialID, input.response.id))
         .limit(1);
 
       if (!authenticator) {
@@ -205,8 +203,8 @@ export const authRouter = router({
         expectedOrigin: origin,
         expectedRPID: rpID,
         authenticator: {
-          credentialID: Buffer.from(authenticator.credentialID, 'base64'),
-          credentialPublicKey: Buffer.from(authenticator.credentialPublicKey, 'base64'),
+          credentialID: isoBase64URL.toBuffer(authenticator.credentialID),
+          credentialPublicKey: isoBase64URL.toBuffer(authenticator.credentialPublicKey),
           counter: authenticator.counter,
         },
       });
