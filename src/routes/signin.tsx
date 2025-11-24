@@ -42,7 +42,7 @@ function SigninPage() {
         navigate({ to: '/' });
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to sign in. Please try again.';
+      const message = err instanceof Error ? err.message : 'Anmeldung fehlgeschlagen. Bitte versuche es erneut.';
       setError(message);
     } finally {
       setLoading(false);
@@ -66,7 +66,7 @@ function SigninPage() {
       <Container size="xs">
         <Stack gap="xl">
           <Title order={1} size="h1" style={{ color: 'white', textAlign: 'center' }}>
-            Sign In
+            Anmelden
           </Title>
 
           <form onSubmit={handleSignin}>
@@ -80,8 +80,8 @@ function SigninPage() {
               }}
             >
               <TextInput
-                label="Username"
-                placeholder="Enter your username"
+                label="Benutzername"
+                placeholder="Gib deinen Benutzernamen ein"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.currentTarget.value)}
@@ -89,13 +89,13 @@ function SigninPage() {
               />
 
               {error && (
-                <Alert color="red" title="Error">
+                <Alert color="red" title="Fehler">
                   {error}
                 </Alert>
               )}
 
               <Button type="submit" size="lg" loading={loading} fullWidth>
-                Sign In with Passkey
+                Mit Passkey anmelden
               </Button>
 
               <Button
@@ -104,7 +104,7 @@ function SigninPage() {
                 onClick={() => navigate({ to: '/signup' })}
                 disabled={loading}
               >
-                Don't have an account? Sign Up
+                Noch kein Konto? Registrieren
               </Button>
 
               <Button
@@ -113,7 +113,7 @@ function SigninPage() {
                 onClick={() => navigate({ to: '/' })}
                 disabled={loading}
               >
-                Back to Home
+                Zurück zur Startseite
               </Button>
             </Stack>
           </form>
