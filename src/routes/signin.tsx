@@ -36,6 +36,8 @@ function SigninPage() {
 
       if (verified) {
         // Store user info in localStorage
+        // Note: For production, consider using secure session management
+        // with HTTP-only cookies or a proper session store
         localStorage.setItem('currentUser', JSON.stringify(user));
         navigate({ to: '/' });
       }

@@ -10,9 +10,18 @@ function Dashboard() {
   const [currentUser, setCurrentUser] = useState<{ username: string } | null>(null);
 
   useEffect(() => {
-    const user = localStorage.getItem('currentUser');
-    if (user) {
-      setCurrentUser(JSON.parse(user));
+    try {
+      const userStr = localStorage.getItem('currentUser');
+      if (userStr) {
+        const parsed = JSON.parse(userStr);
+        // Validate the parsed data has expected shape
+        if (parsed && typeof parsed.username === 'string') {
+          setCurrentUser(parsed);
+        }
+      }
+    } catch (error) {
+      // Invalid JSON or other error, clear invalid data
+      localStorage.removeItem('currentUser');
     }
   }, []);
 
