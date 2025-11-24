@@ -4,7 +4,7 @@ name: Deploy PR Review App
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    branches: ['main']
+    branches: ["main"]
 
 # Sets permissions of the GITHUB_TOKEN to allow pushing to GitHub Container Registry
 permissions:
@@ -14,7 +14,7 @@ permissions:
 
 # Allow only one concurrent deployment per PR
 concurrency:
-  group: 'pr-${{ github.event.pull_request.number }}'
+  group: "pr-${{ github.event.pull_request.number }}"
   cancel-in-progress: true
 
 jobs:
@@ -84,10 +84,6 @@ jobs:
           curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
           chmod 700 get_helm.sh
           ./get_helm.sh
-
-      - name: 🔐 Setup namespace
-        run: |
-          kubectl apply -f k8s/namespace.yaml
 
       - name: 🚀 Deploy review app with Helm
         env:
