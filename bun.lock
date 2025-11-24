@@ -23,7 +23,6 @@
       },
       "devDependencies": {
         "@tanstack/react-router-devtools": "^1.136.18",
-        "@types/better-sqlite3": "^7.6.13",
         "@types/react": "^18.2.15",
         "@types/react-dom": "^18.2.7",
         "@typescript-eslint/eslint-plugin": "^6.0.0",
