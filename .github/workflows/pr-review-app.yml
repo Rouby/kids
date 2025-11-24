@@ -96,6 +96,8 @@ jobs:
             --set image.tag=pr-${PR_NUMBER}-${SHA_SHORT} \
             --set replicaCount=1 \
             --set-string deployment.annotations."deployment\.kubernetes\.io/revision-sha"=${SHA_SHORT} \
+            --set env.ORIGIN=https://pr-${PR_NUMBER}.kids.aiacta.com \
+            --set env.RP_ID=pr-${PR_NUMBER}.kids.aiacta.com \
             --set ingress.hosts[0].host=pr-${PR_NUMBER}.kids.aiacta.com \
             --set ingress.hosts[0].paths[0].path=/ \
             --set ingress.hosts[0].paths[0].pathType=Prefix \

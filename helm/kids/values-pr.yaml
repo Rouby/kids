@@ -13,6 +13,11 @@ image:
 
 replicaCount: 1  # Review apps use fewer replicas
 
+# Environment variables (will be overridden by workflow)
+env:
+  ORIGIN: "https://pr-1.kids.aiacta.com"  # This will be overridden
+  RP_ID: "pr-1.kids.aiacta.com"  # This will be overridden
+
 service:
   type: ClusterIP
   port: 80

@@ -27,6 +27,13 @@ spec:
         ports:
         - containerPort: {{ .Values.service.containerPort | default 80 }}
           name: http
+        {{- if .Values.env }}
+        env:
+          {{- range $key, $value := .Values.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+          {{- end }}
+        {{- end }}
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
         livenessProbe:
