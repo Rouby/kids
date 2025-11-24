@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button, Container, Stack, Title, TextInput, Alert } from '@mantine/core';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { startAuthentication } from '@simplewebauthn/browser';
-import { trpcClient } from '~/utils/trpc';
+import { useTRPCClient } from '~/utils/trpc';
 
 export const Route = createFileRoute('/signin')({
   component: SigninPage,
@@ -13,6 +13,7 @@ function SigninPage() {
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const trpcClient = useTRPCClient();
 
   const handleSignin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,16 +30,12 @@ function SigninPage() {
       const authenticationResponse = await startAuthentication(options);
 
       // Verify authentication with server
-      const { verified, user } = await trpcClient.auth.verifyAuthentication.mutate({
+      const { verified } = await trpcClient.auth.verifyAuthentication.mutate({
         userId,
         response: authenticationResponse,
       });
 
       if (verified) {
-        // Store user info in localStorage
-        // Note: For production, consider using secure session management
-        // with HTTP-only cookies or a proper session store
-        localStorage.setItem('currentUser', JSON.stringify(user));
         navigate({ to: '/' });
       }
     } catch (err: unknown) {
