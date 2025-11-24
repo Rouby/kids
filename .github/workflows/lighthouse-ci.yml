@@ -40,7 +40,7 @@ jobs:
           max_attempts=30
           attempt=1
           while [ $attempt -le $max_attempts ]; do
-            if curl -sSf http://localhost:4173 > /dev/null 2>&1; then
+            if curl -sSf http://localhost:3000 > /dev/null 2>&1; then
               echo "Preview server is ready!"
               break
             fi
@@ -58,7 +58,7 @@ jobs:
         run: |
           # Run Lighthouse on the local preview server
           bunx @lhci/cli autorun \
-            --collect.url="http://localhost:4173" \
+            --collect.url="http://localhost:3000" \
             --collect.numberOfRuns=3 \
             --upload.target=temporary-public-storage
         env:
