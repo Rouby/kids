@@ -185,11 +185,14 @@ export const authRouter = router({
         throw new Error('User not found or no challenge');
       }
 
-      // Get the authenticator
+      // Get the authenticator by converting the base64url id to base64
+      const credentialIdBuffer = Buffer.from(input.response.id, 'base64url');
+      const credentialIdBase64 = credentialIdBuffer.toString('base64');
+      
       const [authenticator] = await db
         .select()
         .from(authenticators)
-        .where(eq(authenticators.credentialID, Buffer.from(input.response.id, 'base64url').toString('base64')))
+        .where(eq(authenticators.credentialID, credentialIdBase64))
         .limit(1);
 
       if (!authenticator) {
