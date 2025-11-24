@@ -16,6 +16,7 @@ replicaCount: 1  # Review apps use fewer replicas
 service:
   type: ClusterIP
   port: 80
+  containerPort: 3000
 
 ingress:
   enabled: true

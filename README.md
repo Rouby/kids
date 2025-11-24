@@ -1,24 +1,26 @@
-# Kids App - React + TypeScript + Vite + TanStack Router
+# Kids App - React + TypeScript + Vite + TanStack Router + Bun + tRPC
 
-This is an educational kids app built with React, TypeScript, Vite, and TanStack Router for file-based routing.
+This is an educational kids app built with React, TypeScript, Vite, and TanStack Router for file-based routing, with a Bun server backend using tRPC for API communication and SQLite for data storage.
 
 ## Features
 
-- 🎮 Multiple educational games (Asteroids, German States, Clock Learning)
+- 🎮 Multiple educational games (Asteroids, German States, Clock Learning, Geometric Forms)
 - 🧭 File-based routing with TanStack Router for better scalability
 - 📱 PWA support with offline capabilities
 - 🎨 Mantine UI components
 - ⚡ Fast development with Vite and HMR
+- 🚀 Bun server for high-performance backend
+- 🔌 tRPC for type-safe API communication
+- 💾 SQLite database with Drizzle ORM
 
 ## Architecture
 
+### Frontend
 The app uses TanStack Router for file-based routing, which provides:
 - Type-safe routing
 - Automatic code splitting
 - Easy addition of new games/routes
 - Better developer experience with route generation
-
-### Route Structure
 
 Routes are defined in `src/routes/`:
 - `__root.tsx` - Root layout with Mantine provider
@@ -26,8 +28,25 @@ Routes are defined in `src/routes/`:
 - `asteroids.tsx` - Asteroids game
 - `germanstates.tsx` - German States game
 - `clock.tsx` - Clock learning game
+- `geometricforms.tsx` - Geometric forms game
 
 Game components are in `src/components/`.
+
+### Backend
+The app uses a Bun server with tRPC for API endpoints:
+- **Server**: `server/index.ts` - Main Bun HTTP server
+- **tRPC Router**: `server/trpc/router.ts` - API endpoints
+- **Database**: SQLite with Drizzle ORM
+- **Schema**: `server/db/schema.ts` - Database schema definitions
+
+### API Endpoints
+The tRPC API provides the following endpoints:
+- `health` - Health check endpoint
+- `user.list` - List all users
+- `user.getById` - Get user by ID
+- `user.create` - Create a new user
+- `user.update` - Update an existing user
+- `user.delete` - Delete a user
 
 ## Deployment
 
@@ -39,9 +58,9 @@ All deployments use git SHA-based versioning to ensure specific versions are alw
 
 The deployment process is automated through GitHub Actions:
 
-1. **Build**: A multi-stage Docker image is built using Bun and nginx
+1. **Build**: A multi-stage Docker image is built using Bun
    - Git SHA is embedded in the image as a build argument and label
-   - Git SHA is stored in `/usr/share/nginx/html/version.txt` for runtime access
+   - Git SHA is stored in `/app/dist/version.txt` for runtime access
 2. **Push**: The image is pushed to GitHub Container Registry (ghcr.io) with tags:
    - `latest` tag for the most recent main branch build
    - `main-{SHA}` tag for the specific commit
@@ -65,7 +84,7 @@ All resources are deployed to the `kids` namespace using Helm:
 - **Helm Chart**: Located in `helm/kids/`
 - **Namespace**: Dedicated namespace for the application
 - **Deployment**: Runs 2 replicas with resource limits (1 replica for review apps)
-- **Service**: ClusterIP service exposing port 80
+- **Service**: ClusterIP service exposing port 3000
 - **Ingress**: NGINX ingress with TLS using Let's Encrypt via cert-manager
 
 ### Manual Deployment
@@ -114,7 +133,7 @@ helm upgrade --install kids-pr-${PR_NUMBER} ./helm/kids \
 ### Version Information
 
 The deployed git SHA can be accessed at runtime:
-- In the container: `cat /usr/share/nginx/html/version.txt`
+- In the container: `cat /app/dist/version.txt`
 - Via HTTP: `https://kids.aiacta.com/version.txt`
 - Docker image label: `git.sha`
 - Deployment pod annotation: `deployment.kubernetes.io/revision-sha`
@@ -127,18 +146,34 @@ The deployed git SHA can be accessed at runtime:
 # Install dependencies
 bun install
 
-# Start development server
+# Start development server (frontend only - Vite dev server)
 bun run dev
+
+# Start backend server (for API development)
+bun run server:dev
 
 # Build for production
 bun run build
 
-# Preview production build
+# Start production server (serves built frontend + API)
 bun run start
 
 # Run linter
 bun run lint
+
+# Database commands
+bun run db:generate  # Generate migrations from schema changes
+bun run db:push      # Push schema changes to database
+bun run db:studio    # Open Drizzle Studio for database management
 ```
+
+### Development Workflow
+
+For full-stack development, run both servers:
+1. Terminal 1: `bun run dev` (frontend with hot reload on port 5173)
+2. Terminal 2: `bun run server:dev` (backend with auto-reload on port 3000)
+
+The Vite dev server proxies `/api` requests to the backend server.
 
 ### Adding New Games/Routes
 
@@ -152,8 +187,11 @@ bun run lint
 - **React** - UI library
 - **TypeScript** - Type safety
 - **Vite** - Build tool and dev server
-- **Bun** - JavaScript runtime and package manager
+- **Bun** - JavaScript runtime, package manager, and HTTP server
 - **TanStack Router** - File-based routing
+- **tRPC** - End-to-end type-safe API
+- **Drizzle ORM** - TypeScript ORM for database
+- **SQLite** - Embedded database (via bun:sqlite)
 - **Mantine** - UI component library
 - **Framer Motion** - Animations
 - **Vite PWA Plugin** - Progressive Web App support
