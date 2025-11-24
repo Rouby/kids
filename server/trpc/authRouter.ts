@@ -12,12 +12,21 @@ import {
 import type {
   RegistrationResponseJSON,
   AuthenticationResponseJSON,
+  AuthenticatorTransportFuture,
 } from '@simplewebauthn/types';
 import { isoBase64URL, isoUint8Array } from '@simplewebauthn/server/helpers';
 
 const rpName = 'Kids App';
-const rpID = process.env.RP_ID || 'localhost';
-const origin = process.env.ORIGIN || `http://localhost:3000`;
+
+// Get RP ID and origin from environment or derive from a base URL
+// In production, set RP_ID to match your domain (e.g., 'kids.aiacta.com')
+// For local development, use 'localhost'
+function getWebAuthnConfig() {
+  const origin = process.env.ORIGIN || 'http://localhost:3000';
+  // Extract hostname from origin to use as RP ID
+  const rpID = process.env.RP_ID || new URL(origin).hostname;
+  return { origin, rpID };
+}
 
 export const authRouter = router({
   // Generate registration options for new user signup
@@ -49,6 +58,7 @@ export const authRouter = router({
         })
         .returning();
 
+      const { rpID } = getWebAuthnConfig();
       const options = await generateRegistrationOptions({
         rpName,
         rpID,
@@ -90,6 +100,7 @@ export const authRouter = router({
         throw new Error('User not found or no challenge');
       }
 
+      const { origin, rpID } = getWebAuthnConfig();
       const verification = await verifyRegistrationResponse({
         response: input.response,
         expectedChallenge: user.currentChallenge,
@@ -104,10 +115,11 @@ export const authRouter = router({
       const { credentialPublicKey, credentialID, counter, credentialDeviceType, credentialBackedUp } =
         verification.registrationInfo;
 
-      // Store the authenticator - credentialID is already a Uint8Array, convert to base64url string
+      // Store the authenticator - credentialID is already a Base64URLString
+      // credentialPublicKey is Uint8Array so needs conversion
       await db.insert(authenticators).values({
         userId: user.id,
-        credentialID: isoBase64URL.fromBuffer(credentialID),
+        credentialID, // Already a base64url string
         credentialPublicKey: isoBase64URL.fromBuffer(credentialPublicKey),
         counter,
         credentialDeviceType,
@@ -148,12 +160,12 @@ export const authRouter = router({
         .from(authenticators)
         .where(eq(authenticators.userId, user.id));
 
+      const { rpID } = getWebAuthnConfig();
       const options = await generateAuthenticationOptions({
         rpID,
         allowCredentials: userAuthenticators.map((auth) => ({
-          id: isoBase64URL.toBuffer(auth.credentialID),
-          type: 'public-key',
-          transports: auth.transports?.split(',') as AuthenticatorTransport[] | undefined,
+          id: auth.credentialID, // Already a Base64URLString
+          transports: auth.transports?.split(',') as AuthenticatorTransportFuture[] | undefined,
         })),
         userVerification: 'preferred',
       });
@@ -197,13 +209,14 @@ export const authRouter = router({
         throw new Error('Authenticator not found');
       }
 
+      const { origin, rpID } = getWebAuthnConfig();
       const verification = await verifyAuthenticationResponse({
         response: input.response,
         expectedChallenge: user.currentChallenge,
         expectedOrigin: origin,
         expectedRPID: rpID,
         authenticator: {
-          credentialID: isoBase64URL.toBuffer(authenticator.credentialID),
+          credentialID: authenticator.credentialID, // Already a Base64URLString
           credentialPublicKey: isoBase64URL.toBuffer(authenticator.credentialPublicKey),
           counter: authenticator.counter,
         },
