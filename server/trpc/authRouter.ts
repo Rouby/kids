@@ -23,8 +23,17 @@ const rpName = 'Kids App';
 // For local development, use 'localhost'
 function getWebAuthnConfig() {
   const origin = process.env.ORIGIN || 'http://localhost:3000';
-  // Extract hostname from origin to use as RP ID
-  const rpID = process.env.RP_ID || new URL(origin).hostname;
+  let rpID = process.env.RP_ID;
+  
+  if (!rpID) {
+    try {
+      rpID = new URL(origin).hostname;
+    } catch {
+      // Fallback to localhost if URL parsing fails
+      rpID = 'localhost';
+    }
+  }
+  
   return { origin, rpID };
 }
 
