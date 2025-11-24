@@ -29,11 +29,8 @@ Bun.serve({
       const filePath = join(distPath, url.pathname === '/' ? 'index.html' : url.pathname);
       
       // Try to read the file
-      let file;
-      try {
-        file = Bun.file(filePath);
-        await file.text(); // Check if file exists
-      } catch {
+      let file = Bun.file(filePath);
+      if (!(await file.exists())) {
         // If file not found, serve index.html for SPA routing
         file = Bun.file(join(distPath, 'index.html'));
       }
