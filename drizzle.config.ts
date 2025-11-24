@@ -4,7 +4,6 @@ export default defineConfig({
   schema: './server/db/schema.ts',
   out: './server/db/migrations',
   dialect: 'sqlite',
-  driver: 'bun:sqlite',
   dbCredentials: {
     url: 'data/kids.db',
   },
