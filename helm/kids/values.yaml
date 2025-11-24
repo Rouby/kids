@@ -18,6 +18,11 @@ replicaCount: 2
 deployment:
   annotations: {}
 
+# Environment variables
+env:
+  ORIGIN: "https://kids.aiacta.com"
+  RP_ID: "kids.aiacta.com"
+
 # Service configuration
 service:
   type: ClusterIP
