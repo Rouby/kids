@@ -152,7 +152,7 @@ export const authRouter = router({
         rpID,
         allowCredentials: userAuthenticators.map((auth) => ({
           id: isoBase64URL.toBuffer(auth.credentialID),
-          type: 'public-key' as const,
+          type: 'public-key',
           transports: auth.transports?.split(',') as AuthenticatorTransport[] | undefined,
         })),
         userVerification: 'preferred',
