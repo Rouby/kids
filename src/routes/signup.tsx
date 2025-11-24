@@ -42,7 +42,7 @@ function SignupPage() {
         navigate({ to: '/signin' });
       }, 2000);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to sign up. Please try again.';
+      const message = err instanceof Error ? err.message : 'Registrierung fehlgeschlagen. Bitte versuche es erneut.';
       setError(message);
     } finally {
       setLoading(false);
@@ -66,7 +66,7 @@ function SignupPage() {
       <Container size="xs">
         <Stack gap="xl">
           <Title order={1} size="h1" style={{ color: 'white', textAlign: 'center' }}>
-            Sign Up
+            Registrieren
           </Title>
 
           <form onSubmit={handleSignup}>
@@ -80,14 +80,14 @@ function SignupPage() {
               }}
             >
               {success ? (
-                <Alert color="green" title="Success!">
-                  Account created successfully! Redirecting to sign in...
+                <Alert color="green" title="Erfolg!">
+                  Konto erfolgreich erstellt! Weiterleitung zur Anmeldung...
                 </Alert>
               ) : (
                 <>
                   <TextInput
-                    label="Username"
-                    placeholder="Enter your username"
+                    label="Benutzername"
+                    placeholder="Gib deinen Benutzernamen ein"
                     required
                     value={username}
                     onChange={(e) => setUsername(e.currentTarget.value)}
@@ -95,8 +95,8 @@ function SignupPage() {
                   />
 
                   <TextInput
-                    label="Email (optional)"
-                    placeholder="Enter your email"
+                    label="E-Mail (optional)"
+                    placeholder="Gib deine E-Mail ein"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.currentTarget.value)}
@@ -104,18 +104,18 @@ function SignupPage() {
                   />
 
                   {error && (
-                    <Alert color="red" title="Error">
+                    <Alert color="red" title="Fehler">
                       {error}
                     </Alert>
                   )}
 
                   <Text size="sm" c="dimmed">
-                    You'll use a passkey to sign in. Make sure your device supports passkeys (Face ID,
-                    Touch ID, Windows Hello, or security keys).
+                    Du wirst einen Passkey zum Anmelden verwenden. Stelle sicher, dass dein Gerät
+                    Passkeys unterstützt (Face ID, Touch ID, Windows Hello oder Sicherheitsschlüssel).
                   </Text>
 
                   <Button type="submit" size="lg" loading={loading} fullWidth>
-                    Create Account with Passkey
+                    Konto mit Passkey erstellen
                   </Button>
 
                   <Button
@@ -124,7 +124,7 @@ function SignupPage() {
                     onClick={() => navigate({ to: '/signin' })}
                     disabled={loading}
                   >
-                    Already have an account? Sign In
+                    Bereits ein Konto? Anmelden
                   </Button>
 
                   <Button
@@ -133,7 +133,7 @@ function SignupPage() {
                     onClick={() => navigate({ to: '/' })}
                     disabled={loading}
                   >
-                    Back to Home
+                    Zurück zur Startseite
                   </Button>
                 </>
               )}

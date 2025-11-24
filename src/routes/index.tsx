@@ -53,10 +53,10 @@ function Dashboard() {
             {currentUser && (
               <Group gap="sm">
                 <Text size="lg" style={{ color: 'white' }}>
-                  Welcome, {currentUser.username}!
+                  Willkommen, {currentUser.username}!
                 </Text>
                 <Button variant="light" color="white" size="xs" onClick={handleSignOut}>
-                  Sign Out
+                  Abmelden
                 </Button>
               </Group>
             )}
@@ -71,7 +71,7 @@ function Dashboard() {
                 variant="white"
                 color="violet"
               >
-                Sign In
+                Anmelden
               </Button>
               <Button
                 component={Link}
@@ -80,7 +80,7 @@ function Dashboard() {
                 variant="filled"
                 color="violet"
               >
-                Sign Up
+                Registrieren
               </Button>
             </Group>
           )}
