@@ -57,11 +57,14 @@ export function AsteroidsGame() {
   // Use server high score if available, otherwise fall back to local storage
   const highScore = serverHighScore?.score ?? localHighScore;
 
-  const setHighScore = (score: number) => {
-    setLocalHighScore(score);
-    localStorage.setItem('asteroidsHighScore', score.toString());
-    // Also submit to server (will only save if user is logged in)
-    submitScoreMutation.mutate({ game: 'asteroids', score });
+  const updateHighScore = (score: number) => {
+    // Only update if the new score is higher than the current high score
+    if (score > highScore) {
+      setLocalHighScore(score);
+      localStorage.setItem('asteroidsHighScore', score.toString());
+      // Also submit to server (will only save if user is logged in)
+      submitScoreMutation.mutate({ game: 'asteroids', score });
+    }
   };
 
   // Load textures and sounds
@@ -133,7 +136,7 @@ export function AsteroidsGame() {
           gameOver={gameOver}
           setGameOver={setGameOver}
           highScore={highScore}
-          setHighScore={setHighScore}
+          updateHighScore={updateHighScore}
           collectStarSoundRef={collectStarSoundRef}
           collisionSoundRef={collisionSoundRef}
         />
@@ -148,7 +151,7 @@ interface GameSceneProps {
   gameOver: boolean;
   setGameOver: (gameOver: boolean) => void;
   highScore: number;
-  setHighScore: (score: number) => void;
+  updateHighScore: (score: number) => void;
   collectStarSoundRef: React.MutableRefObject<HTMLAudioElement | null>;
   collisionSoundRef: React.MutableRefObject<HTMLAudioElement | null>;
 }
@@ -159,7 +162,7 @@ function GameScene({
   gameOver,
   setGameOver,
   highScore,
-  setHighScore,
+  updateHighScore,
   collectStarSoundRef,
   collisionSoundRef,
 }: GameSceneProps) {
@@ -190,10 +193,9 @@ function GameScene({
   // Update high score when score changes
   useEffect(() => {
     if (score > highScore) {
-      setHighScore(score);
-      localStorage.setItem('asteroidsHighScore', score.toString());
+      updateHighScore(score);
     }
-  }, [score, highScore, setHighScore]);
+  }, [score, highScore, updateHighScore]);
 
   const resetGame = () => {
     setScore(0);
