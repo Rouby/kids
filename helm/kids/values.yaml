@@ -22,6 +22,7 @@ deployment:
 env:
   ORIGIN: "https://kids.aiacta.com"
   RP_ID: "kids.aiacta.com"
+  # DATABASE_URL: "postgres://user:pass@host:5432/db" # Set this in secrets or override
 
 # Service configuration
 service:
