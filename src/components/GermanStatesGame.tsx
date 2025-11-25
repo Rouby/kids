@@ -1,6 +1,7 @@
 import { Button, Container, Group, Paper, Progress, Stack, Text, Title } from '@mantine/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
+import { usePoints } from '../hooks/usePoints';
 
 // German states (Bundesländer) and their capitals
 const GERMAN_STATES = [
@@ -31,6 +32,7 @@ interface QuizQuestion {
 }
 
 export function GermanStatesGame() {
+  const { points, addPoints } = usePoints();
   const [gameMode, setGameMode] = useState<GameMode>('menu');
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
@@ -39,6 +41,7 @@ export function GermanStatesGame() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
+  const [pointsEarned, setPointsEarned] = useState(0);
 
   const generateQuestions = (mode: 'capitalToState' | 'stateToCapital') => {
     // Shuffle states array
@@ -75,6 +78,7 @@ export function GermanStatesGame() {
     setSelectedAnswer(null);
     setShowFeedback(false);
     setStreak(0);
+    setPointsEarned(0);
   };
 
   const handleAnswer = (answer: string) => {
@@ -92,6 +96,10 @@ export function GermanStatesGame() {
       if (newStreak > bestStreak) {
         setBestStreak(newStreak);
       }
+      // Award points: 10 base + streak bonus (max 5)
+      const earnedPoints = 10 + Math.min(newStreak - 1, 5);
+      setPointsEarned(prev => prev + earnedPoints);
+      addPoints(earnedPoints);
     } else {
       setStreak(0);
     }
@@ -328,6 +336,23 @@ export function GermanStatesGame() {
                       </motion.div>
                     )}
                   </AnimatePresence>
+
+                  {pointsEarned > 0 && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 1.5, type: 'spring', bounce: 0.5 }}
+                    >
+                      <Text size="lg" ta="center" c="teal" fw={600}>
+                        💎 +{pointsEarned} Punkte verdient!
+                        {points !== null && (
+                          <Text size="sm" c="dimmed">
+                            (Gesamt: {points} Punkte)
+                          </Text>
+                        )}
+                      </Text>
+                    </motion.div>
+                  )}
 
                   <motion.div
                     initial={{ y: 50, opacity: 0 }}
