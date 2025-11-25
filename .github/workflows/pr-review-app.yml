@@ -60,8 +60,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             GIT_SHA=${{ steps.sha.outputs.sha-short }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: |
+            type=gha,scope=review-${{ github.event.pull_request.number }}
+            type=gha,scope=production
+          cache-to: type=gha,mode=max,scope=review-${{ github.event.pull_request.number }}
 
   deploy:
     name: Deploy PR Review App to Kubernetes
