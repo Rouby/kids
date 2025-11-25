@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Application, extend, useTick } from '@pixi/react';
 import { Container, Sprite, Texture, Assets, Text, Graphics } from 'pixi.js';
+import { useTRPC } from '../utils/trpc';
+import { useQuery, useMutation } from '@tanstack/react-query';
 
 // Register PixiJS components for use in JSX
 extend({ Container, Sprite, Text, Graphics });
@@ -29,16 +31,38 @@ interface Star {
 }
 
 export function AsteroidsGame() {
+  const trpc = useTRPC();
   const [gameSize, setGameSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [texturesLoaded, setTexturesLoaded] = useState(false);
   const [gameOver, setGameOver] = useState(false);
-  const [highScore, setHighScore] = useState(() => {
+  const [localHighScore, setLocalHighScore] = useState(() => {
     const saved = localStorage.getItem('asteroidsHighScore');
     return saved ? parseInt(saved, 10) : 0;
   });
   const rocketXRef = useRef(window.innerWidth / 2);
   const collectStarSoundRef = useRef<HTMLAudioElement | null>(null);
   const collisionSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  // Fetch server-side high score for logged-in users
+  const { data: serverHighScore } = useQuery({
+    ...trpc.game.getHighScore.queryOptions({ game: 'asteroids' }),
+    refetchOnWindowFocus: false,
+  });
+
+  // Submit score mutation
+  const submitScoreMutation = useMutation({
+    ...trpc.game.submitScore.mutationOptions(),
+  });
+
+  // Use server high score if available, otherwise fall back to local storage
+  const highScore = serverHighScore?.score ?? localHighScore;
+
+  const setHighScore = (score: number) => {
+    setLocalHighScore(score);
+    localStorage.setItem('asteroidsHighScore', score.toString());
+    // Also submit to server (will only save if user is logged in)
+    submitScoreMutation.mutate({ game: 'asteroids', score });
+  };
 
   // Load textures and sounds
   useEffect(() => {

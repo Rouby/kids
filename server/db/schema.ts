@@ -5,6 +5,18 @@ export const users = pgTable('users', {
   username: text('username').notNull().unique(),
   email: text('email'),
   currentChallenge: text('current_challenge'),
+  points: integer('points').notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const highScores = pgTable('high_scores', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  game: text('game').notNull(), // e.g., 'asteroids'
+  score: integer('score').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -27,3 +39,5 @@ export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Authenticator = typeof authenticators.$inferSelect;
 export type NewAuthenticator = typeof authenticators.$inferInsert;
+export type HighScore = typeof highScores.$inferSelect;
+export type NewHighScore = typeof highScores.$inferInsert;

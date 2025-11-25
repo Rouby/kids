@@ -1,6 +1,7 @@
-import { Button, Container, Stack, Title, Group, Text } from '@mantine/core';
+import { Button, Container, Stack, Title, Group, Text, Badge } from '@mantine/core';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useAuth } from '../hooks/useAuth';
+import { usePoints } from '../hooks/usePoints';
 
 export const Route = createFileRoute('/')({
   component: Dashboard,
@@ -8,6 +9,7 @@ export const Route = createFileRoute('/')({
 
 function Dashboard() {
   const { user } = useAuth();
+  const { points } = usePoints();
 
   return (
     <div
@@ -30,14 +32,21 @@ function Dashboard() {
               Kids App Dashboard
             </Title>
             {user && (
-              <Group gap="sm">
-                <Text size="lg" style={{ color: 'white' }}>
-                  Willkommen, {user.username}!
-                </Text>
-                <Button component={Link} to="/settings" variant="light" color="white" size="xs">
-                  Einstellungen
-                </Button>
-              </Group>
+              <Stack gap="xs" align="center">
+                <Group gap="sm">
+                  <Text size="lg" style={{ color: 'white' }}>
+                    Willkommen, {user.username}!
+                  </Text>
+                  <Button component={Link} to="/settings" variant="light" color="white" size="xs">
+                    Einstellungen
+                  </Button>
+                </Group>
+                {points !== null && (
+                  <Badge size="xl" variant="filled" color="yellow" style={{ fontSize: '1rem' }}>
+                    💎 {points} Punkte
+                  </Badge>
+                )}
+              </Stack>
             )}
           </Stack>
 
