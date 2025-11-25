@@ -15,7 +15,7 @@ const connectionString = process.env.DATABASE_URL;
 
 if (connectionString && connectionString.startsWith('postgres://')) {
   // Production or external Postgres
-  const client = postgres(connectionString);
+  const client = postgres(connectionString, { prepare: false });
   db = drizzlePostgres(client, { schema });
 } else {
   // Local development with PGlite
