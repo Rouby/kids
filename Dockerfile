@@ -12,7 +12,11 @@ COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
 # Copy source files
-COPY . .
+# Copy source files
+COPY index.html vite.config.ts tsconfig.json tsconfig.node.json postcss.config.cjs ./
+COPY src ./src
+COPY public ./public
+
 
 # Build the application
 RUN bun run build
