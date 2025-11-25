@@ -8,7 +8,9 @@ const PORT = process.env.PORT || 3000;
 const distPath = join(import.meta.dir, '../dist');
 
 // Initialize database and run migrations
-await runMigrations();
+if (process.env.DISABLE_MIGRATIONS !== 'true') {
+  await runMigrations();
+}
 
 Bun.serve({
   port: PORT,
