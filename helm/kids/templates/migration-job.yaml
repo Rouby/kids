@@ -22,4 +22,4 @@ spec:
           command: ["bun", "run", "server/migrate-standalone.ts"]
           env:
             - name: DATABASE_URL
-              value: "postgres://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.password }}@{{ include "kids.fullname" . }}-postgres:5432/{{ .Values.postgres.auth.database }}"
+              value: "postgres://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.password }}@{{ include "kids.fullname" . }}-postgres-svc:5432/{{ .Values.postgres.auth.database }}"

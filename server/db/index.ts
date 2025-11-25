@@ -1,6 +1,8 @@
 import { PGlite } from '@electric-sql/pglite';
 import { drizzle as drizzlePglite } from 'drizzle-orm/pglite';
 import { drizzle as drizzlePostgres } from 'drizzle-orm/postgres-js';
+import { existsSync, mkdirSync } from 'fs';
+import { dirname } from 'path';
 import postgres from 'postgres';
 import * as schema from './schema';
 
@@ -17,6 +19,11 @@ if (connectionString && connectionString.startsWith('postgres://')) {
   db = drizzlePostgres(client, { schema });
 } else {
   // Local development with PGlite
-  const client = new PGlite('./data/kids-pg.db');
+  const dbPath = './data/kids-pg.db';
+  const dbDir = dirname(dbPath);
+  if (!existsSync(dbDir)) {
+    mkdirSync(dbDir, { recursive: true });
+  }
+  const client = new PGlite(dbPath);
   db = drizzlePglite(client, { schema });
 }
