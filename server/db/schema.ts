@@ -1,20 +1,16 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { pgTable, text, serial, timestamp, boolean, integer } from 'drizzle-orm/pg-core';
 
-export const users = sqliteTable('users', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
   username: text('username').notNull().unique(),
   email: text('email'),
   currentChallenge: text('current_challenge'),
-  createdAt: integer('created_at', { mode: 'timestamp' })
-    .notNull()
-    .$defaultFn(() => new Date()),
-  updatedAt: integer('updated_at', { mode: 'timestamp' })
-    .notNull()
-    .$defaultFn(() => new Date()),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-export const authenticators = sqliteTable('authenticators', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
+export const authenticators = pgTable('authenticators', {
+  id: serial('id').primaryKey(),
   userId: integer('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
@@ -22,11 +18,9 @@ export const authenticators = sqliteTable('authenticators', {
   credentialPublicKey: text('credential_public_key').notNull(),
   counter: integer('counter').notNull(),
   credentialDeviceType: text('credential_device_type').notNull(),
-  credentialBackedUp: integer('credential_backed_up', { mode: 'boolean' }).notNull(),
+  credentialBackedUp: boolean('credential_backed_up').notNull(),
   transports: text('transports'),
-  createdAt: integer('created_at', { mode: 'timestamp' })
-    .notNull()
-    .$defaultFn(() => new Date()),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 export type User = typeof users.$inferSelect;
