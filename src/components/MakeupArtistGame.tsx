@@ -257,6 +257,9 @@ export function MakeupArtistGame() {
   }, []);
 
   const handleColorChange = useCallback((color: string) => {
+    // Mascara only has intensity, no color property
+    if (selectedTool === 'mascara') return;
+    
     setMakeup(prev => ({
       ...prev,
       [selectedTool]: { ...prev[selectedTool], color },
@@ -286,22 +289,38 @@ export function MakeupArtistGame() {
 
     let earnedPoints = 0;
     const target = currentChallenge.target;
+    const pointsPerTool = currentChallenge.points / Object.keys(target).length;
 
-    // Simple scoring based on how close the makeup is to the target
+    // Scoring based on intensity and color matching
     Object.entries(target).forEach(([tool, targetValue]) => {
       const currentValue = makeup[tool as MakeupToolType];
       if (targetValue && currentValue) {
+        let toolPoints = 0;
+        
+        // Intensity matching (50% of tool points)
         const intensityDiff = Math.abs((targetValue.intensity ?? 0) - (currentValue.intensity ?? 0));
         if (intensityDiff < 20) {
-          earnedPoints += currentChallenge.points / Object.keys(target).length;
+          toolPoints += pointsPerTool * 0.5;
         } else if (intensityDiff < 40) {
-          earnedPoints += (currentChallenge.points / Object.keys(target).length) * 0.5;
+          toolPoints += pointsPerTool * 0.25;
         }
+        
+        // Color matching (50% of tool points) - skip for mascara which has no color
+        if ('color' in targetValue && 'color' in currentValue) {
+          if (targetValue.color === currentValue.color) {
+            toolPoints += pointsPerTool * 0.5;
+          }
+        } else {
+          // For mascara or tools without color target, give full intensity-based points
+          toolPoints *= 2;
+        }
+        
+        earnedPoints += toolPoints;
       }
     });
 
     const roundedPoints = Math.round(earnedPoints);
-    setScore(prev => prev + roundedPoints);
+    setScore(roundedPoints); // Set score to current challenge points only
     addPoints(roundedPoints);
     setCompletedChallenges(prev => prev + 1);
     setGameMode('results');
