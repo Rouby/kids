@@ -395,6 +395,7 @@ export function MakeupArtistGame() {
   const [isPainting, setIsPainting] = useState(false);
   const [currentChallenge, setCurrentChallenge] = useState<Challenge | null>(null);
   const [completedChallenges, setCompletedChallenges] = useState<number>(0);
+  const [earnedPoints, setEarnedPoints] = useState(0);
 
   const resetMakeup = useCallback(() => {
     setBrushStrokes([]);
@@ -432,11 +433,28 @@ export function MakeupArtistGame() {
   };
 
   const finishLook = () => {
-    if (currentChallenge) {
-      // Award points based on brush strokes (simplified scoring for painting mode)
-      const earnedPoints = Math.min(brushStrokes.length * 2, currentChallenge.points);
-      addPoints(earnedPoints);
+    if (currentChallenge && brushStrokes.length > 0) {
+      // Improved scoring algorithm that considers variety and coverage
+      const toolsUsed = new Set(brushStrokes.map(s => s.tool)).size;
+      const uniquePositions = new Set(brushStrokes.map(s => `${Math.round(s.x/20)}-${Math.round(s.y/20)}`)).size;
+      
+      // Base points for using multiple tools (variety bonus)
+      const varietyBonus = Math.min(toolsUsed * 10, 30);
+      
+      // Coverage bonus based on unique areas painted (max 40 points)
+      const coverageBonus = Math.min(uniquePositions * 2, 40);
+      
+      // Base participation points
+      const participationPoints = 5;
+      
+      // Total points (capped at challenge max)
+      const totalPoints = Math.min(participationPoints + varietyBonus + coverageBonus, currentChallenge.points);
+      
+      setEarnedPoints(totalPoints);
+      addPoints(totalPoints);
       setCompletedChallenges(prev => prev + 1);
+    } else {
+      setEarnedPoints(0);
     }
     setGameMode('results');
   };
@@ -609,9 +627,9 @@ export function MakeupArtistGame() {
                     Dein Look ist fertig!
                   </Text>
                   
-                  {currentChallenge && brushStrokes.length > 0 && (
+                  {currentChallenge && earnedPoints > 0 && (
                     <Text size="lg" c="pink" fw={600} ta="center">
-                      💎 Punkte verdient!
+                      💎 +{earnedPoints} Punkte verdient!
                     </Text>
                   )}
 
