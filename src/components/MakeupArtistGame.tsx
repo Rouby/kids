@@ -1,18 +1,63 @@
 import { Button, Container, Group, Paper, Stack, Text, Title, ColorSwatch, Slider } from '@mantine/core';
 import { motion } from 'framer-motion';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { usePoints } from '../hooks/usePoints';
+
+// Color name mappings for accessibility
+const COLOR_NAMES: Record<string, string> = {
+  '#D32F2F': 'Dunkelrot',
+  '#C2185B': 'Kirschrot',
+  '#E91E63': 'Pink',
+  '#FF4081': 'Hellpink',
+  '#FF6B6B': 'Korallenrot',
+  '#AD1457': 'Magenta',
+  '#880E4F': 'Burgunder',
+  '#B71C1C': 'Tiefrot',
+  '#7B1FA2': 'Lila',
+  '#512DA8': 'Violett',
+  '#303F9F': 'Indigo',
+  '#1976D2': 'Blau',
+  '#00796B': 'Türkis',
+  '#388E3C': 'Grün',
+  '#F57C00': 'Orange',
+  '#5D4037': 'Braun',
+  '#00BCD4': 'Cyan',
+  '#FFCDD2': 'Zartrosa',
+  '#F8BBD9': 'Hellrosa',
+  '#FCE4EC': 'Blassrosa',
+  '#FFAB91': 'Pfirsich',
+  '#FFCCBC': 'Apricot',
+  '#E1BEE7': 'Lavendel',
+  '#212121': 'Schwarz',
+  '#3E2723': 'Dunkelbraun',
+  '#1A237E': 'Dunkelblau',
+  '#4A148C': 'Dunkellila',
+  '#006064': 'Dunkelcyan',
+  '#1B5E20': 'Dunkelgrün',
+  '#000000': 'Tiefschwarz',
+  '#FDEBD0': 'Elfenbein',
+  '#F5CBA7': 'Beige',
+  '#E8BEAC': 'Sand',
+  '#D4A574': 'Karamell',
+  '#C68642': 'Bronze',
+  '#8D5524': 'Mokka',
+};
+
+// Unique stroke ID counter
+let strokeIdCounter = 0;
 
 // Makeup tool types
 type MakeupToolType = 'lipstick' | 'eyeshadow' | 'blush' | 'eyeliner' | 'mascara' | 'foundation';
 
 // Brush stroke for painting
 interface BrushStroke {
+  id: number;
   x: number;
   y: number;
   color: string;
   size: number;
   tool: MakeupToolType;
+  opacity: number;
 }
 
 // Color palettes for each tool
@@ -64,26 +109,26 @@ interface AvatarProps {
 function Avatar({ brushStrokes, onPaint, isPainting, setIsPainting }: AvatarProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   
-  const getMousePosition = (e: React.MouseEvent<SVGSVGElement>) => {
+  const getPosition = (clientX: number, clientY: number) => {
     if (!svgRef.current) return null;
     const rect = svgRef.current.getBoundingClientRect();
     const scaleX = 300 / rect.width;
     const scaleY = 400 / rect.height;
     return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY,
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY,
     };
   };
   
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
     setIsPainting(true);
-    const pos = getMousePosition(e);
+    const pos = getPosition(e.clientX, e.clientY);
     if (pos) onPaint(pos.x, pos.y);
   };
   
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!isPainting) return;
-    const pos = getMousePosition(e);
+    const pos = getPosition(e.clientX, e.clientY);
     if (pos) onPaint(pos.x, pos.y);
   };
   
@@ -91,12 +136,74 @@ function Avatar({ brushStrokes, onPaint, isPainting, setIsPainting }: AvatarProp
     setIsPainting(false);
   };
 
+  // Touch event handlers for mobile support
+  const handleTouchStart = (e: React.TouchEvent<SVGSVGElement>) => {
+    e.preventDefault();
+    setIsPainting(true);
+    const touch = e.touches[0];
+    const pos = getPosition(touch.clientX, touch.clientY);
+    if (pos) onPaint(pos.x, pos.y);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<SVGSVGElement>) => {
+    e.preventDefault();
+    if (!isPainting) return;
+    const touch = e.touches[0];
+    const pos = getPosition(touch.clientX, touch.clientY);
+    if (pos) onPaint(pos.x, pos.y);
+  };
+
+  const handleTouchEnd = () => {
+    setIsPainting(false);
+  };
+
+  // Memoize brush strokes rendering for performance
+  const renderedStrokes = useMemo(() => {
+    return brushStrokes.map((stroke) => {
+      // Create more realistic makeup effects based on tool type
+      const getStrokeStyle = () => {
+        switch (stroke.tool) {
+          case 'lipstick':
+            return { opacity: stroke.opacity * 0.85, filter: 'url(#lipBlur)' };
+          case 'eyeshadow':
+            return { opacity: stroke.opacity * 0.6, filter: 'url(#eyeshadowBlur)' };
+          case 'blush':
+            return { opacity: stroke.opacity * 0.35, filter: 'url(#blushBlur)' };
+          case 'foundation':
+            return { opacity: stroke.opacity * 0.2, filter: 'url(#foundationBlur)' };
+          case 'eyeliner':
+            return { opacity: stroke.opacity * 0.9, filter: 'none' };
+          case 'mascara':
+            return { opacity: stroke.opacity * 0.85, filter: 'none' };
+          default:
+            return { opacity: stroke.opacity * 0.5, filter: 'none' };
+        }
+      };
+      
+      const style = getStrokeStyle();
+      
+      return (
+        <circle
+          key={stroke.id}
+          cx={stroke.x}
+          cy={stroke.y}
+          r={stroke.size}
+          fill={stroke.color}
+          opacity={style.opacity}
+          style={{ mixBlendMode: stroke.tool === 'foundation' ? 'normal' : 'multiply', filter: style.filter }}
+        />
+      );
+    });
+  }, [brushStrokes]);
+
   return (
     <svg 
       ref={svgRef}
       viewBox="0 0 300 400" 
       width="300" 
       height="400" 
+      role="img"
+      aria-label="Make-up Artist Gesicht zum Bemalen"
       style={{ 
         filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
         cursor: 'crosshair',
@@ -106,251 +213,313 @@ function Avatar({ brushStrokes, onPaint, isPainting, setIsPainting }: AvatarProp
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <defs>
-        {/* Skin gradient for realistic look */}
-        <radialGradient id="skinGradient" cx="50%" cy="40%" r="60%">
-          <stop offset="0%" stopColor="#FFE4C4" />
-          <stop offset="50%" stopColor="#FFDAB9" />
-          <stop offset="100%" stopColor="#DEB887" />
+        {/* Blur filters for realistic makeup effects */}
+        <filter id="lipBlur" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" />
+        </filter>
+        <filter id="eyeshadowBlur" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
+        </filter>
+        <filter id="blushBlur" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="8" />
+        </filter>
+        <filter id="foundationBlur" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="12" />
+        </filter>
+        
+        {/* Realistic skin gradient with subtle variations */}
+        <radialGradient id="skinGradient" cx="50%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#FCECD9" />
+          <stop offset="30%" stopColor="#F8D9C4" />
+          <stop offset="60%" stopColor="#F0C8B0" />
+          <stop offset="100%" stopColor="#E0B090" />
         </radialGradient>
         
-        {/* Lip gradient */}
+        {/* Forehead gradient */}
+        <radialGradient id="foreheadGradient" cx="50%" cy="100%" r="100%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.15)" />
+          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+        </radialGradient>
+        
+        {/* Cheek shadow gradient */}
+        <radialGradient id="cheekShadowGradient" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="rgba(200,150,130,0.15)" />
+          <stop offset="100%" stopColor="rgba(200,150,130,0)" />
+        </radialGradient>
+        
+        {/* Natural lip color gradient */}
         <linearGradient id="lipGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#E8A0A0" />
-          <stop offset="50%" stopColor="#D88888" />
-          <stop offset="100%" stopColor="#C87070" />
+          <stop offset="0%" stopColor="#D4918A" />
+          <stop offset="40%" stopColor="#C8827A" />
+          <stop offset="100%" stopColor="#B87068" />
         </linearGradient>
         
-        {/* Hair gradient */}
+        {/* Lip highlight */}
+        <linearGradient id="lipHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.3)" />
+          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+        </linearGradient>
+        
+        {/* Realistic hair gradient */}
         <linearGradient id="hairGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#4A3728" />
-          <stop offset="50%" stopColor="#3D2B1F" />
-          <stop offset="100%" stopColor="#2C1810" />
+          <stop offset="0%" stopColor="#3D2B1F" />
+          <stop offset="30%" stopColor="#2C1810" />
+          <stop offset="100%" stopColor="#1A0F0A" />
         </linearGradient>
         
-        {/* Eye shadow gradient */}
-        <radialGradient id="shadowGradient" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="rgba(0,0,0,0.1)" />
-          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+        {/* Hair highlight */}
+        <radialGradient id="hairHighlight" cx="30%" cy="20%" r="40%">
+          <stop offset="0%" stopColor="rgba(100,70,50,0.4)" />
+          <stop offset="100%" stopColor="rgba(100,70,50,0)" />
         </radialGradient>
         
         {/* Nose shadow */}
         <linearGradient id="noseShadow" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="rgba(0,0,0,0.05)" />
+          <stop offset="0%" stopColor="rgba(180,140,100,0.12)" />
           <stop offset="50%" stopColor="rgba(0,0,0,0)" />
-          <stop offset="100%" stopColor="rgba(0,0,0,0.08)" />
+          <stop offset="100%" stopColor="rgba(180,140,100,0.15)" />
         </linearGradient>
+        
+        {/* Eye socket shadow */}
+        <radialGradient id="eyeSocketGradient" cx="50%" cy="60%" r="60%">
+          <stop offset="0%" stopColor="rgba(150,120,100,0.08)" />
+          <stop offset="100%" stopColor="rgba(150,120,100,0)" />
+        </radialGradient>
+        
+        {/* Iris gradient for realistic eyes */}
+        <radialGradient id="irisGradient" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#8B6914" />
+          <stop offset="50%" stopColor="#5D4A1F" />
+          <stop offset="100%" stopColor="#3D2B1F" />
+        </radialGradient>
         
         {/* Clip path for face area */}
         <clipPath id="faceClip">
-          <ellipse cx="150" cy="180" rx="95" ry="120" />
+          <path d="M55 140 Q55 80 150 65 Q245 80 245 140 Q250 200 245 240 Q220 310 150 320 Q80 310 55 240 Q50 200 55 140 Z" />
+        </clipPath>
+        
+        {/* Lip clip path */}
+        <clipPath id="lipClip">
+          <ellipse cx="150" cy="262" rx="35" ry="18" />
         </clipPath>
       </defs>
       
-      {/* Background/Neck */}
-      <rect x="115" y="290" width="70" height="110" fill="url(#skinGradient)" />
-      <ellipse cx="150" cy="295" rx="35" ry="15" fill="url(#skinGradient)" />
-      
+      {/* Background/Neck with realistic shading */}
+      <path 
+        d="M115 295 Q115 310 120 350 L180 350 Q185 310 185 295" 
+        fill="url(#skinGradient)" 
+      />
+      <ellipse cx="150" cy="298" rx="38" ry="12" fill="url(#skinGradient)" />
       {/* Neck shadow */}
-      <ellipse cx="150" cy="300" rx="30" ry="10" fill="rgba(0,0,0,0.05)" />
+      <ellipse cx="150" cy="302" rx="32" ry="8" fill="rgba(180,140,100,0.1)" />
       
-      {/* Hair back */}
-      <ellipse cx="150" cy="100" rx="100" ry="80" fill="url(#hairGradient)" />
+      {/* Hair back - fuller and more realistic */}
+      <ellipse cx="150" cy="95" rx="105" ry="85" fill="url(#hairGradient)" />
+      <ellipse cx="150" cy="95" rx="105" ry="85" fill="url(#hairHighlight)" />
       
-      {/* Face base with realistic shape */}
-      <ellipse cx="150" cy="180" rx="95" ry="120" fill="url(#skinGradient)" />
+      {/* Face base - more natural face shape with jawline */}
+      <path 
+        d="M55 140 Q55 80 150 65 Q245 80 245 140 Q250 200 245 240 Q220 310 150 320 Q80 310 55 240 Q50 200 55 140 Z" 
+        fill="url(#skinGradient)" 
+      />
+      
+      {/* Subtle face contouring */}
+      <ellipse cx="150" cy="115" rx="55" ry="30" fill="url(#foreheadGradient)" />
+      <ellipse cx="75" cy="220" rx="35" ry="45" fill="url(#cheekShadowGradient)" />
+      <ellipse cx="225" cy="220" rx="35" ry="45" fill="url(#cheekShadowGradient)" />
       
       {/* Jawline definition */}
       <path 
-        d="M55 180 Q70 280 150 310 Q230 280 245 180" 
+        d="M75 250 Q100 300 150 315 Q200 300 225 250" 
         fill="none" 
-        stroke="rgba(180,140,100,0.3)" 
-        strokeWidth="2"
+        stroke="rgba(180,140,100,0.15)" 
+        strokeWidth="3"
       />
       
-      {/* Ears */}
-      <ellipse cx="55" cy="180" rx="12" ry="25" fill="url(#skinGradient)" />
-      <ellipse cx="55" cy="180" rx="8" ry="18" fill="rgba(200,160,120,0.3)" />
-      <ellipse cx="245" cy="180" rx="12" ry="25" fill="url(#skinGradient)" />
-      <ellipse cx="245" cy="180" rx="8" ry="18" fill="rgba(200,160,120,0.3)" />
+      {/* Ears with inner detail */}
+      <ellipse cx="52" cy="175" rx="10" ry="22" fill="url(#skinGradient)" />
+      <ellipse cx="52" cy="175" rx="6" ry="15" fill="rgba(200,160,120,0.25)" />
+      <ellipse cx="248" cy="175" rx="10" ry="22" fill="url(#skinGradient)" />
+      <ellipse cx="248" cy="175" rx="6" ry="15" fill="rgba(200,160,120,0.25)" />
       
-      {/* Hair front/bangs */}
+      {/* Hair front - natural looking bangs with texture */}
       <path 
-        d="M60 130 Q80 60 150 50 Q220 60 240 130 Q220 100 150 95 Q80 100 60 130" 
+        d="M55 130 Q70 55 150 45 Q230 55 245 130 Q230 95 150 85 Q70 95 55 130" 
         fill="url(#hairGradient)"
       />
       <path 
-        d="M65 140 Q85 80 150 70 Q215 80 235 140 Q200 110 150 105 Q100 110 65 140" 
+        d="M60 140 Q80 70 150 55 Q220 70 240 140 Q210 100 150 92 Q90 100 60 140" 
         fill="url(#hairGradient)"
       />
-      
-      {/* Forehead highlight */}
-      <ellipse cx="150" cy="120" rx="50" ry="25" fill="rgba(255,255,255,0.1)" />
+      {/* Hair strands for texture */}
+      <path d="M80 120 Q90 80 100 60" stroke="rgba(60,35,20,0.3)" strokeWidth="2" fill="none" />
+      <path d="M120 110 Q125 70 130 50" stroke="rgba(60,35,20,0.3)" strokeWidth="2" fill="none" />
+      <path d="M170 110 Q175 70 180 50" stroke="rgba(60,35,20,0.3)" strokeWidth="2" fill="none" />
+      <path d="M200 120 Q210 80 220 60" stroke="rgba(60,35,20,0.3)" strokeWidth="2" fill="none" />
       
       {/* Brush strokes layer - clipped to face */}
       <g clipPath="url(#faceClip)">
-        {brushStrokes.map((stroke, index) => (
-          <circle
-            key={index}
-            cx={stroke.x}
-            cy={stroke.y}
-            r={stroke.size}
-            fill={stroke.color}
-            opacity={stroke.tool === 'foundation' ? 0.15 : stroke.tool === 'blush' ? 0.25 : 0.5}
-            style={{ mixBlendMode: 'multiply' }}
-          />
-        ))}
+        {renderedStrokes}
       </g>
       
-      {/* Eyebrows - more natural shape */}
-      <path 
-        d="M95 145 Q105 138 120 140 Q130 142 135 145" 
-        stroke="#3D2B1F" 
-        strokeWidth="4" 
-        fill="none" 
-        strokeLinecap="round"
-      />
-      <path 
-        d="M165 145 Q175 142 185 140 Q195 138 205 145" 
-        stroke="#3D2B1F" 
-        strokeWidth="4" 
-        fill="none" 
-        strokeLinecap="round"
-      />
+      {/* Eyebrows - natural individual hair strokes */}
+      <g stroke="#3D2B1F" strokeLinecap="round" fill="none">
+        {/* Left eyebrow */}
+        <path d="M90 148 Q95 143 100 144" strokeWidth="2" />
+        <path d="M95 146 Q102 140 110 142" strokeWidth="2.5" />
+        <path d="M100 145 Q110 139 118 141" strokeWidth="2.5" />
+        <path d="M108 144 Q118 139 125 142" strokeWidth="2" />
+        <path d="M115 144 Q125 140 132 145" strokeWidth="1.5" />
+        {/* Right eyebrow */}
+        <path d="M168 145 Q178 140 185 144" strokeWidth="1.5" />
+        <path d="M175 142 Q185 139 195 144" strokeWidth="2" />
+        <path d="M182 141 Q192 139 202 145" strokeWidth="2.5" />
+        <path d="M190 142 Q200 140 208 146" strokeWidth="2.5" />
+        <path d="M200 144 Q207 143 212 148" strokeWidth="2" />
+      </g>
       
-      {/* Eye sockets shadow */}
-      <ellipse cx="115" cy="175" rx="28" ry="18" fill="rgba(0,0,0,0.03)" />
-      <ellipse cx="185" cy="175" rx="28" ry="18" fill="rgba(0,0,0,0.03)" />
+      {/* Eye sockets - subtle shadows */}
+      <ellipse cx="112" cy="175" rx="32" ry="20" fill="url(#eyeSocketGradient)" />
+      <ellipse cx="188" cy="175" rx="32" ry="20" fill="url(#eyeSocketGradient)" />
       
-      {/* Eyes - more detailed */}
+      {/* Eyes - highly detailed and realistic */}
       {/* Left eye */}
-      <ellipse cx="115" cy="175" rx="22" ry="14" fill="white" />
-      <ellipse cx="115" cy="175" rx="22" ry="14" fill="none" stroke="rgba(0,0,0,0.1)" strokeWidth="0.5" />
-      <circle cx="115" cy="176" r="11" fill="#6B4423" />
-      <circle cx="115" cy="176" r="6" fill="#2C1810" />
-      <circle cx="118" cy="173" r="3" fill="rgba(255,255,255,0.8)" />
-      <circle cx="112" cy="178" r="1.5" fill="rgba(255,255,255,0.4)" />
+      <ellipse cx="112" cy="178" rx="24" ry="14" fill="white" />
+      <ellipse cx="112" cy="178" rx="24" ry="14" fill="none" stroke="rgba(100,70,50,0.2)" strokeWidth="0.5" />
+      {/* Iris with detail */}
+      <circle cx="112" cy="179" r="12" fill="url(#irisGradient)" />
+      <circle cx="112" cy="179" r="12" fill="none" stroke="rgba(80,60,40,0.3)" strokeWidth="0.5" />
+      {/* Pupil */}
+      <circle cx="112" cy="179" r="5" fill="#1A0F0A" />
+      {/* Eye highlights */}
+      <circle cx="116" cy="175" r="3.5" fill="rgba(255,255,255,0.9)" />
+      <circle cx="108" cy="182" r="1.5" fill="rgba(255,255,255,0.5)" />
       
       {/* Right eye */}
-      <ellipse cx="185" cy="175" rx="22" ry="14" fill="white" />
-      <ellipse cx="185" cy="175" rx="22" ry="14" fill="none" stroke="rgba(0,0,0,0.1)" strokeWidth="0.5" />
-      <circle cx="185" cy="176" r="11" fill="#6B4423" />
-      <circle cx="185" cy="176" r="6" fill="#2C1810" />
-      <circle cx="188" cy="173" r="3" fill="rgba(255,255,255,0.8)" />
-      <circle cx="182" cy="178" r="1.5" fill="rgba(255,255,255,0.4)" />
+      <ellipse cx="188" cy="178" rx="24" ry="14" fill="white" />
+      <ellipse cx="188" cy="178" rx="24" ry="14" fill="none" stroke="rgba(100,70,50,0.2)" strokeWidth="0.5" />
+      {/* Iris with detail */}
+      <circle cx="188" cy="179" r="12" fill="url(#irisGradient)" />
+      <circle cx="188" cy="179" r="12" fill="none" stroke="rgba(80,60,40,0.3)" strokeWidth="0.5" />
+      {/* Pupil */}
+      <circle cx="188" cy="179" r="5" fill="#1A0F0A" />
+      {/* Eye highlights */}
+      <circle cx="192" cy="175" r="3.5" fill="rgba(255,255,255,0.9)" />
+      <circle cx="184" cy="182" r="1.5" fill="rgba(255,255,255,0.5)" />
       
-      {/* Upper eyelids */}
-      <path 
-        d="M93 175 Q115 162 137 175" 
-        stroke="rgba(60,40,20,0.4)" 
-        strokeWidth="1.5" 
-        fill="none"
-      />
-      <path 
-        d="M163 175 Q185 162 207 175" 
-        stroke="rgba(60,40,20,0.4)" 
-        strokeWidth="1.5" 
-        fill="none"
-      />
+      {/* Upper eyelids with crease */}
+      <path d="M88 175 Q112 160 136 175" stroke="rgba(120,90,70,0.3)" strokeWidth="1.2" fill="none" />
+      <path d="M90 170 Q112 158 134 170" stroke="rgba(120,90,70,0.15)" strokeWidth="0.8" fill="none" />
+      <path d="M164 175 Q188 160 212 175" stroke="rgba(120,90,70,0.3)" strokeWidth="1.2" fill="none" />
+      <path d="M166 170 Q188 158 210 170" stroke="rgba(120,90,70,0.15)" strokeWidth="0.8" fill="none" />
       
-      {/* Lower eyelids */}
-      <path 
-        d="M93 178 Q115 188 137 178" 
-        stroke="rgba(60,40,20,0.2)" 
-        strokeWidth="1" 
-        fill="none"
-      />
-      <path 
-        d="M163 178 Q185 188 207 178" 
-        stroke="rgba(60,40,20,0.2)" 
-        strokeWidth="1" 
-        fill="none"
-      />
+      {/* Lower eyelids - subtle */}
+      <path d="M90 182 Q112 192 134 182" stroke="rgba(120,90,70,0.15)" strokeWidth="0.8" fill="none" />
+      <path d="M166 182 Q188 192 210 182" stroke="rgba(120,90,70,0.15)" strokeWidth="0.8" fill="none" />
       
-      {/* Eyelashes */}
-      <path d="M93 172 L90 167" stroke="#2C1810" strokeWidth="1" strokeLinecap="round" />
-      <path d="M100 168 L98 162" stroke="#2C1810" strokeWidth="1" strokeLinecap="round" />
-      <path d="M108 165 L107 159" stroke="#2C1810" strokeWidth="1" strokeLinecap="round" />
-      <path d="M115 164 L115 158" stroke="#2C1810" strokeWidth="1" strokeLinecap="round" />
-      <path d="M122 165 L123 159" stroke="#2C1810" strokeWidth="1" strokeLinecap="round" />
-      <path d="M130 168 L132 162" stroke="#2C1810" strokeWidth="1" strokeLinecap="round" />
-      <path d="M137 172 L140 167" stroke="#2C1810" strokeWidth="1" strokeLinecap="round" />
+      {/* Eyelashes - natural looking */}
+      <g stroke="#2C1810" strokeLinecap="round" fill="none">
+        {/* Left eye lashes */}
+        <path d="M88 173 L85 166" strokeWidth="1.2" />
+        <path d="M94 169 L91 161" strokeWidth="1.3" />
+        <path d="M100 166 L98 158" strokeWidth="1.3" />
+        <path d="M106 164 L105 156" strokeWidth="1.4" />
+        <path d="M112 163 L112 155" strokeWidth="1.4" />
+        <path d="M118 164 L119 156" strokeWidth="1.4" />
+        <path d="M124 166 L126 158" strokeWidth="1.3" />
+        <path d="M130 169 L133 161" strokeWidth="1.3" />
+        <path d="M136 173 L139 166" strokeWidth="1.2" />
+        {/* Right eye lashes */}
+        <path d="M164 173 L161 166" strokeWidth="1.2" />
+        <path d="M170 169 L167 161" strokeWidth="1.3" />
+        <path d="M176 166 L174 158" strokeWidth="1.3" />
+        <path d="M182 164 L181 156" strokeWidth="1.4" />
+        <path d="M188 163 L188 155" strokeWidth="1.4" />
+        <path d="M194 164 L195 156" strokeWidth="1.4" />
+        <path d="M200 166 L202 158" strokeWidth="1.3" />
+        <path d="M206 169 L209 161" strokeWidth="1.3" />
+        <path d="M212 173 L215 166" strokeWidth="1.2" />
+      </g>
       
-      <path d="M163 172 L160 167" stroke="#2C1810" strokeWidth="1" strokeLinecap="round" />
-      <path d="M170 168 L168 162" stroke="#2C1810" strokeWidth="1" strokeLinecap="round" />
-      <path d="M178 165 L177 159" stroke="#2C1810" strokeWidth="1" strokeLinecap="round" />
-      <path d="M185 164 L185 158" stroke="#2C1810" strokeWidth="1" strokeLinecap="round" />
-      <path d="M192 165 L193 159" stroke="#2C1810" strokeWidth="1" strokeLinecap="round" />
-      <path d="M200 168 L202 162" stroke="#2C1810" strokeWidth="1" strokeLinecap="round" />
-      <path d="M207 172 L210 167" stroke="#2C1810" strokeWidth="1" strokeLinecap="round" />
-      
-      {/* Nose - more realistic */}
+      {/* Nose - natural 3D appearance */}
       <path 
-        d="M150 155 L150 210" 
+        d="M150 150 L150 218" 
         stroke="url(#noseShadow)" 
-        strokeWidth="15" 
+        strokeWidth="18" 
         strokeLinecap="round"
         fill="none"
       />
+      {/* Nose bridge highlight */}
       <path 
-        d="M150 150 Q145 180 142 210 Q150 218 158 210 Q155 180 150 150" 
+        d="M150 155 L150 200" 
+        stroke="rgba(255,255,255,0.08)" 
+        strokeWidth="6" 
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* Nose shape */}
+      <path 
+        d="M150 148 Q146 185 140 218 Q150 228 160 218 Q154 185 150 148" 
         fill="none" 
-        stroke="rgba(180,140,100,0.3)" 
-        strokeWidth="1.5"
+        stroke="rgba(180,140,100,0.2)" 
+        strokeWidth="1.2"
       />
       {/* Nose tip highlight */}
-      <ellipse cx="150" cy="212" rx="8" ry="5" fill="rgba(255,255,255,0.15)" />
-      {/* Nostrils */}
-      <ellipse cx="142" cy="215" rx="5" ry="3" fill="rgba(0,0,0,0.08)" />
-      <ellipse cx="158" cy="215" rx="5" ry="3" fill="rgba(0,0,0,0.08)" />
+      <ellipse cx="150" cy="220" rx="10" ry="6" fill="rgba(255,255,255,0.12)" />
+      {/* Nostrils - more realistic */}
+      <ellipse cx="140" cy="223" rx="6" ry="4" fill="rgba(120,80,60,0.15)" />
+      <ellipse cx="160" cy="223" rx="6" ry="4" fill="rgba(120,80,60,0.15)" />
       
-      {/* Natural cheek color */}
-      <ellipse cx="85" cy="210" rx="25" ry="15" fill="rgba(255,180,180,0.15)" />
-      <ellipse cx="215" cy="210" rx="25" ry="15" fill="rgba(255,180,180,0.15)" />
+      {/* Natural subtle cheek highlights */}
+      <ellipse cx="85" cy="205" rx="20" ry="12" fill="rgba(255,200,190,0.08)" />
+      <ellipse cx="215" cy="205" rx="20" ry="12" fill="rgba(255,200,190,0.08)" />
       
-      {/* Lips - more realistic shape */}
+      {/* Lips - highly realistic with natural shape */}
+      {/* Upper lip shadow */}
+      <path 
+        d="M118 258 Q150 252 182 258" 
+        fill="none" 
+        stroke="rgba(150,100,90,0.2)" 
+        strokeWidth="2"
+      />
       {/* Upper lip */}
       <path 
-        d="M120 255 Q130 248 150 252 Q170 248 180 255 Q165 252 150 255 Q135 252 120 255" 
+        d="M118 260 Q130 253 142 256 Q150 252 158 256 Q170 253 182 260 Q165 257 150 260 Q135 257 118 260" 
         fill="url(#lipGradient)"
       />
-      {/* Cupid's bow */}
+      {/* Cupid's bow highlight */}
       <path 
-        d="M140 252 Q145 248 150 250 Q155 248 160 252" 
-        fill="url(#lipGradient)"
+        d="M142 256 Q150 251 158 256" 
+        fill="url(#lipHighlight)"
       />
       {/* Lower lip */}
       <path 
-        d="M120 255 Q130 258 150 270 Q170 258 180 255 Q165 258 150 255 Q135 258 120 255" 
+        d="M118 260 Q130 263 150 275 Q170 263 182 260 Q165 262 150 260 Q135 262 118 260" 
         fill="url(#lipGradient)"
       />
       {/* Lip line */}
       <path 
-        d="M120 255 Q150 260 180 255" 
-        stroke="rgba(150,80,80,0.4)" 
-        strokeWidth="0.5" 
+        d="M118 260 Q150 265 182 260" 
+        stroke="rgba(140,90,80,0.3)" 
+        strokeWidth="0.6" 
         fill="none"
       />
       {/* Lower lip highlight */}
-      <ellipse cx="150" cy="262" rx="15" ry="5" fill="rgba(255,255,255,0.2)" />
+      <ellipse cx="150" cy="267" rx="18" ry="5" fill="rgba(255,255,255,0.15)" />
       
-      {/* Chin definition */}
-      <ellipse cx="150" cy="295" rx="25" ry="8" fill="rgba(255,255,255,0.08)" />
+      {/* Chin highlight and definition */}
+      <ellipse cx="150" cy="300" rx="22" ry="6" fill="rgba(255,255,255,0.06)" />
       
-      {/* Philtrum (groove between nose and lips) */}
-      <path 
-        d="M147 220 Q150 240 147 250" 
-        stroke="rgba(180,140,100,0.15)" 
-        strokeWidth="2" 
-        fill="none"
-      />
-      <path 
-        d="M153 220 Q150 240 153 250" 
-        stroke="rgba(180,140,100,0.15)" 
-        strokeWidth="2" 
-        fill="none"
-      />
+      {/* Philtrum with subtle shading */}
+      <path d="M145 228 Q148 245 145 255" stroke="rgba(180,140,100,0.12)" strokeWidth="2.5" fill="none" />
+      <path d="M155 228 Q152 245 155 255" stroke="rgba(180,140,100,0.12)" strokeWidth="2.5" fill="none" />
+      {/* Philtrum highlight */}
+      <path d="M150 230 L150 252" stroke="rgba(255,255,255,0.08)" strokeWidth="3" fill="none" />
     </svg>
   );
 }
@@ -412,13 +581,30 @@ export function MakeupArtistGame() {
   }, []);
 
   const handlePaint = useCallback((x: number, y: number) => {
-    setBrushStrokes(prev => [...prev, {
+    // Get tool-specific opacity
+    const getOpacity = (tool: MakeupToolType): number => {
+      switch (tool) {
+        case 'lipstick': return 0.8;
+        case 'eyeshadow': return 0.6;
+        case 'blush': return 0.4;
+        case 'foundation': return 0.3;
+        case 'eyeliner': return 0.95;
+        case 'mascara': return 0.9;
+        default: return 0.5;
+      }
+    };
+    
+    const newStroke: BrushStroke = {
+      id: ++strokeIdCounter,
       x,
       y,
       color: selectedColor,
       size: brushSize,
       tool: selectedTool,
-    }]);
+      opacity: getOpacity(selectedTool),
+    };
+    
+    setBrushStrokes(prev => [...prev, newStroke]);
   }, [selectedColor, brushSize, selectedTool]);
 
   const startFreePlay = () => {
@@ -776,12 +962,21 @@ export function MakeupArtistGame() {
                   {/* Color selection */}
                   <div>
                     <Text size="sm" fw={500} mb="xs">Farbe wählen:</Text>
-                    <Group gap="xs" justify="center">
+                    <Group gap="xs" justify="center" role="radiogroup" aria-label="Farbauswahl">
                       {TOOL_COLORS[selectedTool].map((color) => (
                         <motion.div key={color} whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.9 }}>
                           <ColorSwatch
                             color={color}
                             onClick={() => handleColorChange(color)}
+                            aria-label={`${COLOR_NAMES[color] || color} ${TOOL_NAMES[selectedTool]}`}
+                            role="radio"
+                            aria-checked={selectedColor === color}
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                handleColorChange(color);
+                              }
+                            }}
                             style={{ 
                               cursor: 'pointer',
                               border: selectedColor === color ? '3px solid #E91E63' : '2px solid white',
@@ -812,13 +1007,16 @@ export function MakeupArtistGame() {
 
                   {/* Brush preview */}
                   <Group justify="center">
-                    <div style={{ 
-                      width: brushSize * 2, 
-                      height: brushSize * 2, 
-                      borderRadius: '50%', 
-                      backgroundColor: selectedColor,
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                    }} />
+                    <div 
+                      aria-hidden="true"
+                      style={{ 
+                        width: brushSize * 2, 
+                        height: brushSize * 2, 
+                        borderRadius: '50%', 
+                        backgroundColor: selectedColor,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                      }} 
+                    />
                   </Group>
 
                   {/* Action buttons */}
