@@ -117,6 +117,17 @@ function Dashboard() {
             >
               🔷 Geometrische Formen
             </Button>
+
+            <Button
+              component={Link}
+              to="/makeup"
+              size="xl"
+              variant="filled"
+              color="grape"
+              style={{ fontSize: '1.5rem', height: 80 }}
+            >
+              💄 Make-up Artist
+            </Button>
           </Stack>
         </Stack>
       </Container>
