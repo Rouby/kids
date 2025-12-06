@@ -43,8 +43,8 @@ const COLOR_NAMES: Record<string, string> = {
   '#8D5524': 'Mokka',
 };
 
-// Unique stroke ID counter
-let strokeIdCounter = 0;
+// Generate unique stroke IDs
+const generateStrokeId = () => Date.now() + Math.random();
 
 // Makeup tool types
 type MakeupToolType = 'lipstick' | 'eyeshadow' | 'blush' | 'eyeliner' | 'mascara' | 'foundation';
@@ -595,7 +595,7 @@ export function MakeupArtistGame() {
     };
     
     const newStroke: BrushStroke = {
-      id: ++strokeIdCounter,
+      id: generateStrokeId(),
       x,
       y,
       color: selectedColor,
@@ -962,29 +962,31 @@ export function MakeupArtistGame() {
                   {/* Color selection */}
                   <div>
                     <Text size="sm" fw={500} mb="xs">Farbe wählen:</Text>
-                    <Group gap="xs" justify="center" role="radiogroup" aria-label="Farbauswahl">
-                      {TOOL_COLORS[selectedTool].map((color) => (
-                        <motion.div key={color} whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.9 }}>
-                          <ColorSwatch
-                            color={color}
-                            onClick={() => handleColorChange(color)}
-                            aria-label={`${COLOR_NAMES[color] || color} ${TOOL_NAMES[selectedTool]}`}
-                            role="radio"
-                            aria-checked={selectedColor === color}
-                            tabIndex={0}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                handleColorChange(color);
-                              }
-                            }}
-                            style={{ 
-                              cursor: 'pointer',
-                              border: selectedColor === color ? '3px solid #E91E63' : '2px solid white',
-                              boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                            }}
-                          />
-                        </motion.div>
-                      ))}
+                    <Group gap="xs" justify="center" role="group" aria-label="Farbauswahl">
+                      {TOOL_COLORS[selectedTool].map((color) => {
+                        const colorName = COLOR_NAMES[color] || 'Farbe';
+                        return (
+                          <motion.div key={color} whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.9 }}>
+                            <ColorSwatch
+                              color={color}
+                              onClick={() => handleColorChange(color)}
+                              aria-label={`${colorName} ${TOOL_NAMES[selectedTool]}${selectedColor === color ? ' (ausgewählt)' : ''}`}
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  handleColorChange(color);
+                                }
+                              }}
+                              style={{ 
+                                cursor: 'pointer',
+                                border: selectedColor === color ? '3px solid #E91E63' : '2px solid white',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                              }}
+                            />
+                          </motion.div>
+                        );
+                      })}
                     </Group>
                   </div>
 
