@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Application, extend, useTick } from '@pixi/react';
 import { Container, Sprite, Texture, Assets, Text, Graphics } from 'pixi.js';
 import { useTRPC } from '../utils/trpc';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Register PixiJS components for use in JSX
 extend({ Container, Sprite, Text, Graphics });
@@ -48,6 +48,7 @@ interface Star {
 
 export function AsteroidsGame() {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const [gameSize, setGameSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [texturesLoaded, setTexturesLoaded] = useState(false);
   const [gameOver, setGameOver] = useState(false);
@@ -65,9 +66,20 @@ export function AsteroidsGame() {
     refetchOnWindowFocus: false,
   });
 
+  // Fetch leaderboard (top 5 scores)
+  const { data: leaderboard } = useQuery({
+    ...trpc.game.getLeaderboard.queryOptions({ game: 'asteroids', limit: 5 }),
+    refetchOnWindowFocus: false,
+  });
+
   // Submit score mutation
   const submitScoreMutation = useMutation({
     ...trpc.game.submitScore.mutationOptions(),
+    onSuccess: () => {
+      // Invalidate queries to refetch leaderboard and high score
+      queryClient.invalidateQueries({ queryKey: [['game', 'getLeaderboard']] });
+      queryClient.invalidateQueries({ queryKey: [['game', 'getHighScore']] });
+    },
   });
 
   // Use server high score if available, otherwise fall back to local storage
@@ -155,6 +167,7 @@ export function AsteroidsGame() {
           updateHighScore={updateHighScore}
           collectStarSoundRef={collectStarSoundRef}
           collisionSoundRef={collisionSoundRef}
+          leaderboard={leaderboard || []}
         />
       </Application>
     </div>
@@ -170,6 +183,7 @@ interface GameSceneProps {
   updateHighScore: (score: number) => void;
   collectStarSoundRef: React.MutableRefObject<HTMLAudioElement | null>;
   collisionSoundRef: React.MutableRefObject<HTMLAudioElement | null>;
+  leaderboard: Array<{ id: number; score: number; username: string; createdAt: Date }>;
 }
 
 function GameScene({
@@ -181,6 +195,7 @@ function GameScene({
   updateHighScore,
   collectStarSoundRef,
   collisionSoundRef,
+  leaderboard,
 }: GameSceneProps) {
   const [asteroids, setAsteroids] = useState<GameObject[]>([
     { id: '1', x: Math.random() * window.innerWidth, y: 0 }
@@ -395,6 +410,53 @@ function GameScene({
           },
         }}
       />
+
+      {/* Leaderboard Display */}
+      {leaderboard.length > 0 && (
+        <>
+          <pixiText
+            text="TOP 5"
+            x={gameSize.width - 20}
+            y={50}
+            anchor={{ x: 1, y: 0.5 }}
+            style={{
+              fontFamily: 'Arial',
+              fontSize: 28,
+              fontWeight: 'bold',
+              fill: '#ffa500',
+              dropShadow: {
+                alpha: 0.6,
+                angle: 45,
+                blur: 3,
+                color: '#000000',
+                distance: 3,
+              },
+            }}
+          />
+          {leaderboard.map((entry, index) => (
+            <pixiText
+              key={entry.id}
+              text={`${index + 1}. ${entry.username}: ${entry.score}`}
+              x={gameSize.width - 20}
+              y={90 + index * 35}
+              anchor={{ x: 1, y: 0.5 }}
+              style={{
+                fontFamily: 'Arial',
+                fontSize: 20,
+                fontWeight: 'normal',
+                fill: '#ffffff',
+                dropShadow: {
+                  alpha: 0.5,
+                  angle: 45,
+                  blur: 2,
+                  color: '#000000',
+                  distance: 2,
+                },
+              }}
+            />
+          ))}
+        </>
+      )}
 
       {/* Rocket */}
       <pixiSprite

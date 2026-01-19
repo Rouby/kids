@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "user_game_idx" ON "high_scores" USING btree ("user_id","game");
