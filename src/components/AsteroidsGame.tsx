@@ -28,8 +28,9 @@ function checkCircleCollision(
 ): boolean {
   const dx = x1 - x2;
   const dy = y1 - y2;
-  const distance = Math.sqrt(dx * dx + dy * dy);
-  return distance < radius1 + radius2;
+  const distanceSquared = dx * dx + dy * dy;
+  const radiusSum = radius1 + radius2;
+  return distanceSquared < radiusSum * radiusSum;
 }
 
 interface GameObject {
