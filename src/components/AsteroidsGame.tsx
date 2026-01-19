@@ -17,6 +17,21 @@ function playSound(audioRef: React.MutableRefObject<HTMLAudioElement | null>) {
   }
 }
 
+// Helper function for circle-based collision detection
+function checkCircleCollision(
+  x1: number,
+  y1: number,
+  radius1: number,
+  x2: number,
+  y2: number,
+  radius2: number
+): boolean {
+  const dx = x1 - x2;
+  const dy = y1 - y2;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  return distance < radius1 + radius2;
+}
+
 interface GameObject {
   id: string;
   x: number;
@@ -246,15 +261,22 @@ function GameScene({
         return { ...asteroid, y: newY };
       });
 
-      // Check asteroid collisions
+      // Check asteroid collisions (using circle-based collision detection)
       newAsteroids.forEach(asteroid => {
         const asteroidSize = 80;
-        if (
-          asteroid.x < rocketX + rocketWidth &&
-          asteroid.x + asteroidSize > rocketX &&
-          asteroid.y < rocketY + rocketHeight &&
-          asteroid.y + asteroidSize > rocketY
-        ) {
+        const asteroidRadius = asteroidSize / 2;
+        const rocketRadius = Math.min(rocketWidth, rocketHeight) / 2;
+        
+        // Calculate center positions for circle collision
+        const asteroidCenterX = asteroid.x + asteroidRadius;
+        const asteroidCenterY = asteroid.y + asteroidRadius;
+        const rocketCenterX = rocketX + rocketWidth / 2;
+        const rocketCenterY = rocketY + rocketHeight / 2;
+        
+        if (checkCircleCollision(
+          rocketCenterX, rocketCenterY, rocketRadius,
+          asteroidCenterX, asteroidCenterY, asteroidRadius
+        )) {
           setGameOver(true);
           // Play collision sound
           playSound(collisionSoundRef);
@@ -290,16 +312,23 @@ function GameScene({
         return { ...star, y: newY };
       });
 
-      // Check star collisions
+      // Check star collisions (using circle-based collision detection)
       const collectedStarIds: string[] = [];
       newStars.forEach(star => {
         const starSize = 40;
-        if (
-          star.x < rocketX + rocketWidth &&
-          star.x + starSize > rocketX &&
-          star.y < rocketY + rocketHeight &&
-          star.y + starSize > rocketY
-        ) {
+        const starRadius = starSize / 2;
+        const rocketRadius = Math.min(rocketWidth, rocketHeight) / 2;
+        
+        // Calculate center positions for circle collision
+        const starCenterX = star.x + starRadius;
+        const starCenterY = star.y + starRadius;
+        const rocketCenterX = rocketX + rocketWidth / 2;
+        const rocketCenterY = rocketY + rocketHeight / 2;
+        
+        if (checkCircleCollision(
+          rocketCenterX, rocketCenterY, rocketRadius,
+          starCenterX, starCenterY, starRadius
+        )) {
           collectedStarIds.push(star.id);
           setScore(prev => prev + 1);
         }
