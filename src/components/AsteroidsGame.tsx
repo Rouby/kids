@@ -77,8 +77,8 @@ export function AsteroidsGame() {
     ...trpc.game.submitScore.mutationOptions(),
     onSuccess: () => {
       // Invalidate queries to refetch leaderboard and high score
-      queryClient.invalidateQueries({ queryKey: [['game', 'getLeaderboard']] });
-      queryClient.invalidateQueries({ queryKey: [['game', 'getHighScore']] });
+      queryClient.invalidateQueries({ queryKey: ['game', 'getLeaderboard'] });
+      queryClient.invalidateQueries({ queryKey: ['game', 'getHighScore'] });
     },
   });
 
