@@ -229,6 +229,11 @@ function GameScene({
     const rocketHeight = 60;
     const rocketY = gameSize.height - gameSize.height * 0.15 - rocketHeight;
     const rocketX = rocketXRef.current;
+    
+    // Pre-calculate rocket collision properties to avoid duplication
+    const rocketRadius = Math.min(rocketWidth, rocketHeight) / 2;
+    const rocketCenterX = rocketX + rocketWidth / 2;
+    const rocketCenterY = rocketY + rocketHeight / 2;
 
     // Difficulty progression: speed increases with score
     const baseSpeed = 2;
@@ -265,13 +270,8 @@ function GameScene({
       newAsteroids.forEach(asteroid => {
         const asteroidSize = 80;
         const asteroidRadius = asteroidSize / 2;
-        const rocketRadius = Math.min(rocketWidth, rocketHeight) / 2;
-        
-        // Calculate center positions for circle collision
         const asteroidCenterX = asteroid.x + asteroidRadius;
         const asteroidCenterY = asteroid.y + asteroidRadius;
-        const rocketCenterX = rocketX + rocketWidth / 2;
-        const rocketCenterY = rocketY + rocketHeight / 2;
         
         if (checkCircleCollision(
           rocketCenterX, rocketCenterY, rocketRadius,
@@ -317,13 +317,8 @@ function GameScene({
       newStars.forEach(star => {
         const starSize = 40;
         const starRadius = starSize / 2;
-        const rocketRadius = Math.min(rocketWidth, rocketHeight) / 2;
-        
-        // Calculate center positions for circle collision
         const starCenterX = star.x + starRadius;
         const starCenterY = star.y + starRadius;
-        const rocketCenterX = rocketX + rocketWidth / 2;
-        const rocketCenterY = rocketY + rocketHeight / 2;
         
         if (checkCircleCollision(
           rocketCenterX, rocketCenterY, rocketRadius,
