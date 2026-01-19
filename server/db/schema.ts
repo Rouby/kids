@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, boolean, integer } from 'drizzle-orm/pg-core';
+import { pgTable, text, serial, timestamp, boolean, integer, uniqueIndex } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
@@ -19,7 +19,9 @@ export const highScores = pgTable('high_scores', {
   score: integer('score').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+}, (table) => ({
+  userGameIdx: uniqueIndex('user_game_idx').on(table.userId, table.game),
+}));
 
 export const authenticators = pgTable('authenticators', {
   id: serial('id').primaryKey(),
