@@ -46,6 +46,15 @@ interface Star {
   alpha: number;
 }
 
+interface PowerUp extends GameObject {
+  type: 'speed' | 'shield' | 'multiplier';
+}
+
+interface ActivePowerUp {
+  type: 'speed' | 'shield' | 'multiplier';
+  expiresAt: number;
+}
+
 export function AsteroidsGame() {
   const trpc = useTRPC();
   const [gameSize, setGameSize] = useState({ width: window.innerWidth, height: window.innerHeight });
@@ -56,6 +65,8 @@ export function AsteroidsGame() {
     return saved ? parseInt(saved, 10) : 0;
   });
   const rocketXRef = useRef(window.innerWidth / 2);
+  const targetRocketXRef = useRef(window.innerWidth / 2);
+  const hasSpeedBoostRef = useRef(false);
   const collectStarSoundRef = useRef<HTMLAudioElement | null>(null);
   const collisionSoundRef = useRef<HTMLAudioElement | null>(null);
 
@@ -86,7 +97,14 @@ export function AsteroidsGame() {
   // Load textures and sounds
   useEffect(() => {
     const loadTextures = async () => {
-      await Assets.load(['/spaceship.svg', '/asteroid.svg', '/star.svg']);
+      await Assets.load([
+        '/spaceship.svg', 
+        '/asteroid.svg', 
+        '/star.svg',
+        '/powerup-speed.svg',
+        '/powerup-shield.svg',
+        '/powerup-multiplier.svg'
+      ]);
       setTexturesLoaded(true);
     };
     loadTextures();
@@ -111,7 +129,7 @@ export function AsteroidsGame() {
     const handlePointerMove = (evt: PointerEvent) => {
       const rocketWidth = 50;
       const xPadding = 50;
-      rocketXRef.current = Math.min(
+      targetRocketXRef.current = Math.min(
         gameSize.width - xPadding - rocketWidth / 2,
         Math.max(xPadding - rocketWidth / 2, evt.clientX - rocketWidth / 2)
       );
@@ -149,6 +167,8 @@ export function AsteroidsGame() {
         <GameScene
           gameSize={gameSize}
           rocketXRef={rocketXRef}
+          targetRocketXRef={targetRocketXRef}
+          hasSpeedBoostRef={hasSpeedBoostRef}
           gameOver={gameOver}
           setGameOver={setGameOver}
           highScore={highScore}
@@ -164,6 +184,8 @@ export function AsteroidsGame() {
 interface GameSceneProps {
   gameSize: { width: number; height: number };
   rocketXRef: React.MutableRefObject<number>;
+  targetRocketXRef: React.MutableRefObject<number>;
+  hasSpeedBoostRef: React.MutableRefObject<boolean>;
   gameOver: boolean;
   setGameOver: (gameOver: boolean) => void;
   highScore: number;
@@ -175,6 +197,8 @@ interface GameSceneProps {
 function GameScene({
   gameSize,
   rocketXRef,
+  targetRocketXRef,
+  hasSpeedBoostRef,
   gameOver,
   setGameOver,
   highScore,
@@ -186,11 +210,14 @@ function GameScene({
     { id: '1', x: Math.random() * window.innerWidth, y: 0 }
   ]);
   const [stars, setStars] = useState<GameObject[]>([]);
+  const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
+  const [activePowerUps, setActivePowerUps] = useState<ActivePowerUp[]>([]);
   const [score, setScore] = useState(0);
   const [backgroundStars, setBackgroundStars] = useState<Star[]>([]);
   
   const nextStarTimeRef = useRef(Date.now() + 1000);
   const nextAsteroidTimeRef = useRef(Date.now() + 250 + Math.random() * 1000);
+  const nextPowerUpTimeRef = useRef(Date.now() + 5000 + Math.random() * 5000);
 
   // Generate background stars
   useEffect(() => {
@@ -218,8 +245,11 @@ function GameScene({
     setGameOver(false);
     setAsteroids([{ id: '1', x: Math.random() * gameSize.width, y: 0 }]);
     setStars([]);
+    setPowerUps([]);
+    setActivePowerUps([]);
     nextStarTimeRef.current = Date.now() + 1000;
     nextAsteroidTimeRef.current = Date.now() + 250 + Math.random() * 1000;
+    nextPowerUpTimeRef.current = Date.now() + 5000 + Math.random() * 5000;
   };
 
   useTick(() => {
@@ -229,12 +259,26 @@ function GameScene({
     const rocketWidth = 50;
     const rocketHeight = 60;
     const rocketY = gameSize.height - gameSize.height * 0.15 - rocketHeight;
+    
+    // Smooth rocket movement with speed boost
+    const baseRocketSpeed = 0.2; // Smoothing factor
+    const rocketSpeed = hasSpeedBoostRef.current ? baseRocketSpeed * 2 : baseRocketSpeed;
+    rocketXRef.current += (targetRocketXRef.current - rocketXRef.current) * rocketSpeed;
     const rocketX = rocketXRef.current;
     
     // Pre-calculate rocket collision properties to avoid duplication
     const rocketRadius = Math.min(rocketWidth, rocketHeight) / 2;
     const rocketCenterX = rocketX + rocketWidth / 2;
     const rocketCenterY = rocketY + rocketHeight / 2;
+
+    // Check for active power-ups and remove expired ones
+    const hasShield = activePowerUps.some(p => p.type === 'shield' && p.expiresAt > now);
+    const hasSpeedBoost = activePowerUps.some(p => p.type === 'speed' && p.expiresAt > now);
+    const hasMultiplier = activePowerUps.some(p => p.type === 'multiplier' && p.expiresAt > now);
+    
+    hasSpeedBoostRef.current = hasSpeedBoost;
+    
+    setActivePowerUps(current => current.filter(p => p.expiresAt > now));
 
     // Difficulty progression: speed increases with score
     const baseSpeed = 2;
@@ -278,9 +322,22 @@ function GameScene({
           rocketCenterX, rocketCenterY, rocketRadius,
           asteroidCenterX, asteroidCenterY, asteroidRadius
         )) {
-          setGameOver(true);
-          // Play collision sound
-          playSound(collisionSoundRef);
+          // If shield is active, just remove the shield instead of ending game
+          if (hasShield) {
+            setActivePowerUps(current => {
+              const shieldIndex = current.findIndex(p => p.type === 'shield');
+              if (shieldIndex !== -1) {
+                const newPowerUps = [...current];
+                newPowerUps.splice(shieldIndex, 1);
+                return newPowerUps;
+              }
+              return current;
+            });
+          } else {
+            setGameOver(true);
+            // Play collision sound
+            playSound(collisionSoundRef);
+          }
         }
       });
 
@@ -326,7 +383,9 @@ function GameScene({
           starCenterX, starCenterY, starRadius
         )) {
           collectedStarIds.push(star.id);
-          setScore(prev => prev + 1);
+          // Apply multiplier if active
+          const points = hasMultiplier ? 2 : 1;
+          setScore(prev => prev + points);
         }
       });
 
@@ -337,6 +396,66 @@ function GameScene({
       }
 
       return newStars;
+    });
+
+    setPowerUps(currentPowerUps => {
+      let newPowerUps = [...currentPowerUps];
+
+      // Spawn new power-ups (less frequently than stars)
+      if (now >= nextPowerUpTimeRef.current && newPowerUps.length < 2) {
+        const powerUpTypes: ('speed' | 'shield' | 'multiplier')[] = ['speed', 'shield', 'multiplier'];
+        const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+        newPowerUps.push({
+          id: `powerup-${now}`,
+          x: Math.random() * gameSize.width,
+          y: 0,
+          type: randomType,
+        });
+        nextPowerUpTimeRef.current = now + 5000 + Math.random() * 5000; // 5-10 seconds
+      }
+
+      // Update power-up positions with difficulty scaling
+      newPowerUps = newPowerUps.map(powerUp => {
+        const newY = powerUp.y + gameSpeed;
+        if (newY > gameSize.height) {
+          return {
+            ...powerUp,
+            x: Math.random() * gameSize.width,
+            y: 0,
+          };
+        }
+        return { ...powerUp, y: newY };
+      });
+
+      // Check power-up collisions
+      const collectedPowerUpIds: string[] = [];
+      newPowerUps.forEach(powerUp => {
+        const powerUpSize = 50;
+        const powerUpRadius = powerUpSize / 2;
+        const powerUpCenterX = powerUp.x + powerUpRadius;
+        const powerUpCenterY = powerUp.y + powerUpRadius;
+        
+        if (checkCircleCollision(
+          rocketCenterX, rocketCenterY, rocketRadius,
+          powerUpCenterX, powerUpCenterY, powerUpRadius
+        )) {
+          collectedPowerUpIds.push(powerUp.id);
+          // Activate the power-up
+          const duration = 5000; // 5 seconds
+          setActivePowerUps(current => [
+            ...current.filter(p => p.type !== powerUp.type), // Remove existing power-up of same type
+            { type: powerUp.type, expiresAt: now + duration }
+          ]);
+        }
+      });
+
+      if (collectedPowerUpIds.length > 0) {
+        newPowerUps = newPowerUps.filter(powerUp => !collectedPowerUpIds.includes(powerUp.id));
+        // Play collect sound
+        playSound(collectStarSoundRef);
+      }
+
+      return newPowerUps;
     });
   });
 
@@ -429,6 +548,53 @@ function GameScene({
           height={40}
         />
       ))}
+
+      {/* Power-ups */}
+      {powerUps.map(powerUp => (
+        <pixiSprite
+          key={powerUp.id}
+          texture={Texture.from(`/powerup-${powerUp.type}.svg`)}
+          x={powerUp.x}
+          y={powerUp.y}
+          width={50}
+          height={50}
+        />
+      ))}
+
+      {/* Active Power-ups Display */}
+      {activePowerUps.map((powerUp, index) => {
+        const now = Date.now();
+        const timeLeft = Math.max(0, powerUp.expiresAt - now);
+        const label = powerUp.type === 'speed' ? '⚡ Speed' : 
+                     powerUp.type === 'shield' ? '🛡️ Shield' : 
+                     '2x Score';
+        const color = powerUp.type === 'speed' ? '#00ffff' : 
+                     powerUp.type === 'shield' ? '#00ff00' : 
+                     '#ff00ff';
+        
+        return (
+          <pixiText
+            key={`active-${powerUp.type}`}
+            text={`${label} (${Math.ceil(timeLeft / 1000)}s)`}
+            x={20}
+            y={150 + index * 40}
+            anchor={{ x: 0, y: 0.5 }}
+            style={{
+              fontFamily: 'Arial',
+              fontSize: 24,
+              fontWeight: 'bold',
+              fill: color,
+              dropShadow: {
+                alpha: 0.6,
+                angle: 45,
+                blur: 3,
+                color: '#000000',
+                distance: 3,
+              },
+            }}
+          />
+        );
+      })}
 
       {/* Game Over Overlay */}
       {gameOver && (
