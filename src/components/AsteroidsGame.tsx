@@ -37,7 +37,7 @@ function checkCircleCollision(
 const POWER_UP_CONFIG = {
   speed: { label: '⚡ Speed', color: '#00ffff' },
   shield: { label: '🛡️ Shield', color: '#00ff00' },
-  multiplier: { label: '2x Score', color: '#ff00ff' },
+  multiplier: { label: '5x Score', color: '#ff00ff' },
 } as const;
 
 interface GameObject {
@@ -290,7 +290,9 @@ function GameScene({
     // Difficulty progression: speed increases with score
     const baseSpeed = 2;
     const speedMultiplier = 1 + Math.floor(score / 10) * 0.1; // +10% every 10 points
-    const gameSpeed = baseSpeed * speedMultiplier;
+    // Speed power-up doubles vertical speed
+    const speedBoostMultiplier = hasSpeedBoost ? 2 : 1;
+    const gameSpeed = baseSpeed * speedMultiplier * speedBoostMultiplier;
 
     setAsteroids(currentAsteroids => {
       let newAsteroids = [...currentAsteroids];
@@ -319,6 +321,7 @@ function GameScene({
       });
 
       // Check asteroid collisions (using circle-based collision detection)
+      const asteroidsToRemove: string[] = [];
       newAsteroids.forEach(asteroid => {
         const asteroidSize = 80;
         const asteroidRadius = asteroidSize / 2;
@@ -329,8 +332,9 @@ function GameScene({
           rocketCenterX, rocketCenterY, rocketRadius,
           asteroidCenterX, asteroidCenterY, asteroidRadius
         )) {
-          // If shield is active, just remove the shield instead of ending game
+          // If shield is active, destroy the asteroid and remove the shield
           if (hasShield) {
+            asteroidsToRemove.push(asteroid.id);
             setActivePowerUps(current => {
               const shieldIndex = current.findIndex(p => p.type === 'shield');
               if (shieldIndex !== -1) {
@@ -340,6 +344,8 @@ function GameScene({
               }
               return current;
             });
+            // Play collision sound for shield breaking
+            playSound(collisionSoundRef);
           } else {
             setGameOver(true);
             // Play collision sound
@@ -347,6 +353,11 @@ function GameScene({
           }
         }
       });
+
+      // Remove asteroids that hit the shield
+      if (asteroidsToRemove.length > 0) {
+        newAsteroids = newAsteroids.filter(asteroid => !asteroidsToRemove.includes(asteroid.id));
+      }
 
       return newAsteroids;
     });
@@ -390,8 +401,8 @@ function GameScene({
           starCenterX, starCenterY, starRadius
         )) {
           collectedStarIds.push(star.id);
-          // Apply multiplier if active
-          const points = hasMultiplier ? 2 : 1;
+          // Apply multiplier if active (5x points instead of 1x)
+          const points = hasMultiplier ? 5 : 1;
           setScore(prev => prev + points);
         }
       });
