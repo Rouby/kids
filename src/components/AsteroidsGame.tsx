@@ -261,8 +261,8 @@ function GameScene({
     const rocketY = gameSize.height - gameSize.height * 0.15 - rocketHeight;
     
     // Smooth rocket movement with speed boost
-    const baseRocketSpeed = 0.2; // Smoothing factor
-    const rocketSpeed = hasSpeedBoostRef.current ? baseRocketSpeed * 2 : baseRocketSpeed;
+    const rocketSmoothingFactor = 0.2; // Interpolation factor
+    const rocketSpeed = hasSpeedBoostRef.current ? rocketSmoothingFactor * 2 : rocketSmoothingFactor;
     rocketXRef.current += (targetRocketXRef.current - rocketXRef.current) * rocketSpeed;
     const rocketX = rocketXRef.current;
     
@@ -414,18 +414,10 @@ function GameScene({
         nextPowerUpTimeRef.current = now + 5000 + Math.random() * 5000; // 5-10 seconds
       }
 
-      // Update power-up positions with difficulty scaling
-      newPowerUps = newPowerUps.map(powerUp => {
-        const newY = powerUp.y + gameSpeed;
-        if (newY > gameSize.height) {
-          return {
-            ...powerUp,
-            x: Math.random() * gameSize.width,
-            y: 0,
-          };
-        }
-        return { ...powerUp, y: newY };
-      });
+      // Update power-up positions and remove those that go off-screen
+      newPowerUps = newPowerUps
+        .map(powerUp => ({ ...powerUp, y: powerUp.y + gameSpeed }))
+        .filter(powerUp => powerUp.y <= gameSize.height);
 
       // Check power-up collisions
       const collectedPowerUpIds: string[] = [];
