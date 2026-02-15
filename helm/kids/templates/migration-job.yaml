@@ -17,7 +17,7 @@ spec:
       restartPolicy: OnFailure
       initContainers:
         - name: wait-for-postgres
-          image: postgres:15
+          image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
           command:
             - sh
             - -c
