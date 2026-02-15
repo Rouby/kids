@@ -20,19 +20,15 @@ spec:
         - name: wait-for-postgres
           image: registry.k8s.io/kubectl:v1.31.0
           command:
-            - sh
-            - -c
-            - |
-              echo "Waiting for PostgreSQL StatefulSet to be ready..."
-              if ! kubectl wait --for=condition=ready pod -l app={{ include "kids.fullname" . }}-postgres -n {{ .Values.namespace }} --timeout=300s; then
-                echo "Error: PostgreSQL pod failed to become ready within 5 minutes"
-                echo "Pod status:"
-                kubectl get pods -l app={{ include "kids.fullname" . }}-postgres -n {{ .Values.namespace }}
-                echo "Pod events:"
-                kubectl describe pods -l app={{ include "kids.fullname" . }}-postgres -n {{ .Values.namespace }} | grep -A 20 "Events:"
-                exit 1
-              fi
-              echo "PostgreSQL pod is ready!"
+            - kubectl
+            - wait
+            - --for=condition=ready
+            - pod
+            - -l
+            - app={{ include "kids.fullname" . }}-postgres
+            - -n
+            - {{ .Values.namespace }}
+            - --timeout=300s
       containers:
         - name: migration
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
