@@ -22,8 +22,16 @@ spec:
             - sh
             - -c
             - |
-              until pg_isready -h {{ include "kids.fullname" . }}-postgres-svc -p 5432; do
-                echo "Waiting for PostgreSQL to be ready..."
+              echo "Waiting for PostgreSQL service {{ include "kids.fullname" . }}-postgres-svc to be ready..."
+              RETRY_COUNT=0
+              MAX_RETRIES=60
+              until pg_isready -h {{ include "kids.fullname" . }}-postgres-svc -p 5432 -U {{ .Values.postgres.auth.username }}; do
+                RETRY_COUNT=$((RETRY_COUNT + 1))
+                if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+                  echo "Error: PostgreSQL did not become ready after $MAX_RETRIES attempts (2 minutes)"
+                  exit 1
+                fi
+                echo "Waiting for PostgreSQL to be ready... (attempt $RETRY_COUNT/$MAX_RETRIES)"
                 sleep 2
               done
               echo "PostgreSQL is ready!"
