@@ -33,6 +33,13 @@ function checkCircleCollision(
   return distanceSquared < radiusSum * radiusSum;
 }
 
+// Power-up display configuration
+const POWER_UP_CONFIG = {
+  speed: { label: '⚡ Speed', color: '#00ffff' },
+  shield: { label: '🛡️ Shield', color: '#00ff00' },
+  multiplier: { label: '2x Score', color: '#ff00ff' },
+} as const;
+
 interface GameObject {
   id: string;
   x: number;
@@ -261,8 +268,8 @@ function GameScene({
     const rocketY = gameSize.height - gameSize.height * 0.15 - rocketHeight;
     
     // Smooth rocket movement with speed boost
-    const rocketSmoothingFactor = 0.2; // Interpolation factor
-    const interpolationFactor = hasSpeedBoostRef.current ? rocketSmoothingFactor * 2 : rocketSmoothingFactor;
+    const baseInterpolationFactor = 0.2; // Base interpolation factor for rocket movement (0.0-1.0)
+    const interpolationFactor = hasSpeedBoostRef.current ? baseInterpolationFactor * 2 : baseInterpolationFactor;
     rocketXRef.current += (targetRocketXRef.current - rocketXRef.current) * interpolationFactor;
     const rocketX = rocketXRef.current;
     
@@ -558,17 +565,12 @@ function GameScene({
         const now = Date.now();
         return activePowerUps.map((powerUp, index) => {
           const timeLeft = Math.max(0, powerUp.expiresAt - now);
-          const label = powerUp.type === 'speed' ? '⚡ Speed' : 
-                       powerUp.type === 'shield' ? '🛡️ Shield' : 
-                       '2x Score';
-          const color = powerUp.type === 'speed' ? '#00ffff' : 
-                       powerUp.type === 'shield' ? '#00ff00' : 
-                       '#ff00ff';
+          const config = POWER_UP_CONFIG[powerUp.type];
           
           return (
             <pixiText
               key={`active-${powerUp.type}`}
-              text={`${label} (${Math.ceil(timeLeft / 1000)}s)`}
+              text={`${config.label} (${Math.ceil(timeLeft / 1000)}s)`}
               x={20}
               y={150 + index * 40}
               anchor={{ x: 0, y: 0.5 }}
@@ -576,7 +578,7 @@ function GameScene({
                 fontFamily: 'Arial',
                 fontSize: 24,
                 fontWeight: 'bold',
-                fill: color,
+                fill: config.color,
                 dropShadow: {
                   alpha: 0.6,
                   angle: 45,
