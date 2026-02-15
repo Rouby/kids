@@ -268,7 +268,7 @@ function GameScene({
     const rocketY = gameSize.height - gameSize.height * 0.15 - rocketHeight;
     
     // Smooth rocket movement with speed boost
-    const baseInterpolationFactor = 0.2; // Base interpolation factor for rocket movement (0.0-1.0)
+    const baseInterpolationFactor = 0.2; // Base value for lerp (0.0-1.0); doubled with speed boost
     const interpolationFactor = hasSpeedBoostRef.current ? baseInterpolationFactor * 2 : baseInterpolationFactor;
     rocketXRef.current += (targetRocketXRef.current - rocketXRef.current) * interpolationFactor;
     const rocketX = rocketXRef.current;
