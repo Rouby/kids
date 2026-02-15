@@ -22,7 +22,7 @@ spec:
             - sh
             - -c
             - |
-              until pg_isready -h {{ include "kids.fullname" . }}-postgres-svc -p 5432 -U {{ .Values.postgres.auth.username }}; do
+              until pg_isready -h {{ include "kids.fullname" . }}-postgres-svc -p 5432; do
                 echo "Waiting for PostgreSQL to be ready..."
                 sleep 2
               done
