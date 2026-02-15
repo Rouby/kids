@@ -321,7 +321,7 @@ function GameScene({
       });
 
       // Check asteroid collisions (using circle-based collision detection)
-      const asteroidsToRemove: string[] = [];
+      const asteroidsToRemove = new Set<string>();
       newAsteroids.forEach(asteroid => {
         const asteroidSize = 80;
         const asteroidRadius = asteroidSize / 2;
@@ -334,7 +334,7 @@ function GameScene({
         )) {
           // If shield is active, destroy the asteroid and remove the shield
           if (hasShield) {
-            asteroidsToRemove.push(asteroid.id);
+            asteroidsToRemove.add(asteroid.id);
             setActivePowerUps(current => {
               const shieldIndex = current.findIndex(p => p.type === 'shield');
               if (shieldIndex !== -1) {
@@ -344,7 +344,7 @@ function GameScene({
               }
               return current;
             });
-            // Play collision sound for shield breaking
+            // Play collision sound for shield hit
             playSound(collisionSoundRef);
           } else {
             setGameOver(true);
@@ -355,8 +355,8 @@ function GameScene({
       });
 
       // Remove asteroids that hit the shield
-      if (asteroidsToRemove.length > 0) {
-        newAsteroids = newAsteroids.filter(asteroid => !asteroidsToRemove.includes(asteroid.id));
+      if (asteroidsToRemove.size > 0) {
+        newAsteroids = newAsteroids.filter(asteroid => !asteroidsToRemove.has(asteroid.id));
       }
 
       return newAsteroids;
