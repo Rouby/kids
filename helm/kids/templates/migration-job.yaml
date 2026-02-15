@@ -15,6 +15,18 @@ spec:
         app: {{ include "kids.fullname" . }}-migration
     spec:
       restartPolicy: OnFailure
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:15
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h {{ include "kids.fullname" . }}-postgres-svc -p 5432 -U {{ .Values.postgres.auth.username }}; do
+                echo "Waiting for PostgreSQL to be ready..."
+                sleep 2
+              done
+              echo "PostgreSQL is ready!"
       containers:
         - name: migration
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
