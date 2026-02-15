@@ -262,8 +262,8 @@ function GameScene({
     
     // Smooth rocket movement with speed boost
     const rocketSmoothingFactor = 0.2; // Interpolation factor
-    const rocketSpeed = hasSpeedBoostRef.current ? rocketSmoothingFactor * 2 : rocketSmoothingFactor;
-    rocketXRef.current += (targetRocketXRef.current - rocketXRef.current) * rocketSpeed;
+    const interpolationFactor = hasSpeedBoostRef.current ? rocketSmoothingFactor * 2 : rocketSmoothingFactor;
+    rocketXRef.current += (targetRocketXRef.current - rocketXRef.current) * interpolationFactor;
     const rocketX = rocketXRef.current;
     
     // Pre-calculate rocket collision properties to avoid duplication
@@ -554,39 +554,41 @@ function GameScene({
       ))}
 
       {/* Active Power-ups Display */}
-      {activePowerUps.map((powerUp, index) => {
+      {(() => {
         const now = Date.now();
-        const timeLeft = Math.max(0, powerUp.expiresAt - now);
-        const label = powerUp.type === 'speed' ? '⚡ Speed' : 
-                     powerUp.type === 'shield' ? '🛡️ Shield' : 
-                     '2x Score';
-        const color = powerUp.type === 'speed' ? '#00ffff' : 
-                     powerUp.type === 'shield' ? '#00ff00' : 
-                     '#ff00ff';
-        
-        return (
-          <pixiText
-            key={`active-${powerUp.type}`}
-            text={`${label} (${Math.ceil(timeLeft / 1000)}s)`}
-            x={20}
-            y={150 + index * 40}
-            anchor={{ x: 0, y: 0.5 }}
-            style={{
-              fontFamily: 'Arial',
-              fontSize: 24,
-              fontWeight: 'bold',
-              fill: color,
-              dropShadow: {
-                alpha: 0.6,
-                angle: 45,
-                blur: 3,
-                color: '#000000',
-                distance: 3,
-              },
-            }}
-          />
-        );
-      })}
+        return activePowerUps.map((powerUp, index) => {
+          const timeLeft = Math.max(0, powerUp.expiresAt - now);
+          const label = powerUp.type === 'speed' ? '⚡ Speed' : 
+                       powerUp.type === 'shield' ? '🛡️ Shield' : 
+                       '2x Score';
+          const color = powerUp.type === 'speed' ? '#00ffff' : 
+                       powerUp.type === 'shield' ? '#00ff00' : 
+                       '#ff00ff';
+          
+          return (
+            <pixiText
+              key={`active-${powerUp.type}`}
+              text={`${label} (${Math.ceil(timeLeft / 1000)}s)`}
+              x={20}
+              y={150 + index * 40}
+              anchor={{ x: 0, y: 0.5 }}
+              style={{
+                fontFamily: 'Arial',
+                fontSize: 24,
+                fontWeight: 'bold',
+                fill: color,
+                dropShadow: {
+                  alpha: 0.6,
+                  angle: 45,
+                  blur: 3,
+                  color: '#000000',
+                  distance: 3,
+                },
+              }}
+            />
+          );
+        });
+      })()}
 
       {/* Game Over Overlay */}
       {gameOver && (
