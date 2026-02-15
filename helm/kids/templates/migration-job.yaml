@@ -18,13 +18,20 @@ spec:
       serviceAccountName: {{ include "kids.fullname" . }}-migration-sa
       initContainers:
         - name: wait-for-postgres
-          image: bitnami/kubectl:latest
+          image: bitnami/kubectl:1.31
           command:
             - sh
             - -c
             - |
               echo "Waiting for PostgreSQL StatefulSet to be ready..."
-              kubectl wait --for=condition=ready pod -l app={{ include "kids.fullname" . }}-postgres -n {{ .Values.namespace }} --timeout=300s
+              if ! kubectl wait --for=condition=ready pod -l app={{ include "kids.fullname" . }}-postgres -n {{ .Values.namespace }} --timeout=300s; then
+                echo "Error: PostgreSQL pod failed to become ready within 5 minutes"
+                echo "Pod status:"
+                kubectl get pods -l app={{ include "kids.fullname" . }}-postgres -n {{ .Values.namespace }}
+                echo "Pod events:"
+                kubectl describe pods -l app={{ include "kids.fullname" . }}-postgres -n {{ .Values.namespace }} | grep -A 20 "Events:"
+                exit 1
+              fi
               echo "PostgreSQL pod is ready!"
       containers:
         - name: migration
