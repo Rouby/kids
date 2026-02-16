@@ -7,7 +7,7 @@ import postgres from 'postgres';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-async function waitForDatabase(maxRetries = 10, delayMs = 2000) {
+async function waitForDatabase(maxRetries = 30, delayMs = 2000) {
   const connectionString = process.env.DATABASE_URL;
   
   if (!connectionString || !connectionString.startsWith('postgres://')) {
@@ -21,7 +21,8 @@ async function waitForDatabase(maxRetries = 10, delayMs = 2000) {
   const sql = postgres(connectionString, { 
     max: 1,
     prepare: false,
-    connect_timeout: 5
+    idle_timeout: 20,
+    connect_timeout: 10
   });
   
   try {
