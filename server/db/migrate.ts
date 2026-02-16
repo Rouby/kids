@@ -24,11 +24,8 @@ async function waitForDatabase(maxRetries = 30, delayMs = 2000) {
     prepare: false,
     idle_timeout: 20,
     connect_timeout: 10,
-    debug: (connection, query, parameters) => {
-      console.log('Postgres debug:', { connection, query, parameters });
-    },
     onnotice: (notice) => {
-      console.log('Postgres notice:', notice);
+      console.log('Postgres notice:', notice.message || notice);
     }
   });
   
@@ -37,9 +34,8 @@ async function waitForDatabase(maxRetries = 30, delayMs = 2000) {
       try {
         console.log(`Attempting to connect (${i + 1}/${maxRetries})...`);
         // Try to execute a simple query to verify connection
-        const result = await sql`SELECT 1 as test, current_database() as db, current_user as user`;
-        console.log('Database is ready!');
-        console.log('Connection successful:', result);
+        await sql`SELECT 1 as test`;
+        console.log('Database is ready! Connection successful.');
         return;
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
