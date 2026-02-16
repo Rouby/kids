@@ -34,7 +34,7 @@ async function waitForDatabase(maxRetries = 30, delayMs = 2000) {
       try {
         console.log(`Attempting to connect (${i + 1}/${maxRetries})...`);
         // Try to execute a simple query to verify connection
-        await sql`SELECT 1 as test`;
+        await sql`SELECT 1`;
         console.log('Database is ready! Connection successful.');
         return;
       } catch (error) {
