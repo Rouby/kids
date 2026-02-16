@@ -7,6 +7,9 @@ import postgres from 'postgres';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// PostgreSQL needs time after pod readiness to complete database initialization
+const POSTGRES_INIT_DELAY_MS = 10000; // 10 seconds
+
 async function waitForDatabase(maxRetries = 60, delayMs = 3000) {
   const connectionString = process.env.DATABASE_URL;
   
@@ -19,8 +22,8 @@ async function waitForDatabase(maxRetries = 60, delayMs = 3000) {
   console.log('Connection string (masked):', connectionString.replace(/\/\/[^:]+:[^@]+@/, '//***:****@'));
   
   // Add initial delay to give PostgreSQL time after pod readiness
-  console.log('Waiting 10 seconds for PostgreSQL to complete initialization after pod readiness...');
-  await new Promise(resolve => setTimeout(resolve, 10000));
+  console.log(`Waiting ${POSTGRES_INIT_DELAY_MS / 1000} seconds for PostgreSQL to complete initialization after pod readiness...`);
+  await new Promise(resolve => setTimeout(resolve, POSTGRES_INIT_DELAY_MS));
   
   // Create a temporary connection just for checking
   const sql = postgres(connectionString, { 
