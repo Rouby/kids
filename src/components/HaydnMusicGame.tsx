@@ -128,8 +128,17 @@ export function HaydnMusicGame() {
   const [bestStreak, setBestStreak] = useState(0);
   const [pointsEarned, setPointsEarned] = useState(0);
 
+  const fisherYatesShuffle = <T,>(arr: T[]): T[] => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+
   const startQuiz = () => {
-    const shuffled = [...ALL_QUIZ_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10);
+    const shuffled = fisherYatesShuffle(ALL_QUIZ_QUESTIONS).slice(0, 10);
     setQuestions(shuffled);
     setCurrentQuestion(0);
     setScore(0);
