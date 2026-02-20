@@ -128,6 +128,17 @@ function Dashboard() {
             >
               💄 Make-up Artist
             </Button>
+
+            <Button
+              component={Link}
+              to="/haydn"
+              size="xl"
+              variant="filled"
+              color="indigo"
+              style={{ fontSize: '1.5rem', height: 80 }}
+            >
+              🎼 Joseph Haydn &amp; Orchester
+            </Button>
           </Stack>
         </Stack>
       </Container>
