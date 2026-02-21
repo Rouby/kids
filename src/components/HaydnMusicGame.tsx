@@ -138,7 +138,10 @@ export function HaydnMusicGame() {
   };
 
   const startQuiz = () => {
-    const shuffled = fisherYatesShuffle(ALL_QUIZ_QUESTIONS).slice(0, 10);
+    const shuffled = fisherYatesShuffle(ALL_QUIZ_QUESTIONS).slice(0, 10).map((q) => ({
+      ...q,
+      options: fisherYatesShuffle(q.options),
+    }));
     setQuestions(shuffled);
     setCurrentQuestion(0);
     setScore(0);
