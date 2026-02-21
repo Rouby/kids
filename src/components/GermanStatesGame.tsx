@@ -2,6 +2,7 @@ import { Button, Container, Group, Paper, Progress, Stack, Text, Title } from '@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { usePoints } from '../hooks/usePoints';
+import { fisherYatesShuffle } from '../utils/shuffle';
 
 // German states (Bundesländer) and their capitals
 const GERMAN_STATES = [
@@ -45,7 +46,7 @@ export function GermanStatesGame() {
 
   const generateQuestions = (mode: 'capitalToState' | 'stateToCapital') => {
     // Shuffle states array
-    const shuffled = [...GERMAN_STATES].sort(() => Math.random() - 0.5);
+    const shuffled = fisherYatesShuffle(GERMAN_STATES);
     const numQuestions = 10; // 10 questions per game
 
     return shuffled.slice(0, numQuestions).map((item) => {
@@ -57,14 +58,14 @@ export function GermanStatesGame() {
       const correctAnswer = isCapitalToState ? item.state : item.capital;
       
       // Generate wrong answers
-      const wrongAnswers = GERMAN_STATES
-        .filter((s) => s.state !== item.state)
-        .sort(() => Math.random() - 0.5)
+      const wrongAnswers = fisherYatesShuffle(
+        GERMAN_STATES.filter((s) => s.state !== item.state)
+      )
         .slice(0, 3)
         .map((s) => (isCapitalToState ? s.state : s.capital));
       
       // Shuffle options
-      const options = [correctAnswer, ...wrongAnswers].sort(() => Math.random() - 0.5);
+      const options = fisherYatesShuffle([correctAnswer, ...wrongAnswers]);
       
       return { question, correctAnswer, options };
     });
@@ -485,6 +486,7 @@ export function GermanStatesGame() {
                           whiteSpace: 'normal',
                           width: '100%',
                         }}
+                        styles={{ label: { whiteSpace: 'normal', wordBreak: 'break-word' } }}
                       >
                         {option}
                       </Button>

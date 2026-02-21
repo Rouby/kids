@@ -2,6 +2,7 @@ import { Button, Container, Group, Paper, Progress, Stack, Text, Title } from '@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { usePoints } from '../hooks/usePoints';
+import { fisherYatesShuffle } from '../utils/shuffle';
 
 // Geometric forms with German names and SVG representations
 const GEOMETRIC_FORMS = [
@@ -106,7 +107,7 @@ export function GeometricFormsGame() {
 
   const generateQuestions = (mode: 'nameToShape' | 'shapeToName') => {
     // Shuffle forms array
-    const shuffled = [...GEOMETRIC_FORMS].sort(() => Math.random() - 0.5);
+    const shuffled = fisherYatesShuffle(GEOMETRIC_FORMS);
     const numQuestions = 10; // 10 questions per game
 
     return shuffled.slice(0, numQuestions).map((item) => {
@@ -118,13 +119,12 @@ export function GeometricFormsGame() {
       const correctAnswer = item.name;
       
       // Generate wrong answers
-      const wrongAnswers = GEOMETRIC_FORMS
-        .filter((f) => f.name !== item.name)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3);
+      const wrongAnswers = fisherYatesShuffle(
+        GEOMETRIC_FORMS.filter((f) => f.name !== item.name)
+      ).slice(0, 3);
       
       // Shuffle options
-      const options = [item, ...wrongAnswers].sort(() => Math.random() - 0.5);
+      const options = fisherYatesShuffle([item, ...wrongAnswers]);
       
       return { 
         question, 
@@ -563,6 +563,7 @@ export function GeometricFormsGame() {
                           justifyContent: 'center',
                           gap: '10px',
                         }}
+                        styles={{ label: { whiteSpace: 'normal', wordBreak: 'break-word' } }}
                       >
                         {question.isShapeQuestion ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
