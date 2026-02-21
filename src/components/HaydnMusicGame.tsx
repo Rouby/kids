@@ -2,6 +2,7 @@ import { Button, Container, Group, Paper, Progress, ScrollArea, Stack, Text, Tit
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
 import { usePoints } from '../hooks/usePoints';
+import { fisherYatesShuffle } from '../utils/shuffle';
 
 type GameMode = 'menu' | 'info' | 'quiz' | 'results';
 
@@ -127,15 +128,6 @@ export function HaydnMusicGame() {
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const [pointsEarned, setPointsEarned] = useState(0);
-
-  const fisherYatesShuffle = <T,>(arr: T[]): T[] => {
-    const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  };
 
   const startQuiz = () => {
     const shuffled = fisherYatesShuffle(ALL_QUIZ_QUESTIONS).slice(0, 10).map((q) => ({
@@ -633,6 +625,7 @@ export function HaydnMusicGame() {
                           whiteSpace: 'normal',
                           width: '100%',
                         }}
+                        styles={{ label: { whiteSpace: 'normal', wordBreak: 'break-word' } }}
                       >
                         {option}
                       </Button>

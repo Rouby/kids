@@ -2,15 +2,7 @@ import { Button, Container, Group, Paper, Progress, ScrollArea, Stack, Text, Tit
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
 import { usePoints } from '../hooks/usePoints';
-
-function fisherYatesShuffle<T>(arr: T[]): T[] {
-  const result = [...arr];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
+import { fisherYatesShuffle } from '../utils/shuffle';
 
 interface QuizQuestion {
   question: string;
@@ -532,7 +524,10 @@ export function SexEdQuizGame() {
 
   const startTopic = (topic: Topic) => {
     setSelectedTopic(topic);
-    setQuestions(fisherYatesShuffle(topic.questions));
+    setQuestions(fisherYatesShuffle(topic.questions).map((q) => ({
+      ...q,
+      options: fisherYatesShuffle(q.options),
+    })));
     setGameMode('quiz');
     setCurrentQuestion(0);
     setScore(0);
@@ -906,6 +901,7 @@ export function SexEdQuizGame() {
                           width: '100%',
                           textAlign: 'left',
                         }}
+                        styles={{ label: { whiteSpace: 'normal', wordBreak: 'break-word' } }}
                       >
                         {option}
                       </Button>
