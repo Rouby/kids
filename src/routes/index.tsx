@@ -139,6 +139,17 @@ function Dashboard() {
             >
               🎼 Joseph Haydn &amp; Orchester
             </Button>
+
+            <Button
+              component={Link}
+              to="/sexedquiz"
+              size="xl"
+              variant="filled"
+              color="pink"
+              style={{ fontSize: '1.5rem', height: 80 }}
+            >
+              🌸 Körper &amp; Gefühle
+            </Button>
           </Stack>
         </Stack>
       </Container>
