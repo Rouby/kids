@@ -15,18 +15,20 @@ spec:
         app: {{ include "kids.fullname" . }}-migration
     spec:
       restartPolicy: OnFailure
+      serviceAccountName: {{ include "kids.fullname" . }}-migration-sa
       initContainers:
         - name: wait-for-postgres
-          image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
+          image: registry.k8s.io/kubectl:v1.31.0
           command:
-            - sh
-            - -c
-            - |
-              until pg_isready -h {{ include "kids.fullname" . }}-postgres-svc -p 5432; do
-                echo "Waiting for PostgreSQL to be ready..."
-                sleep 2
-              done
-              echo "PostgreSQL is ready!"
+            - kubectl
+            - wait
+            - --for=condition=ready
+            - pod
+            - -l
+            - app={{ include "kids.fullname" . }}-postgres
+            - -n
+            - {{ .Values.namespace }}
+            - --timeout=300s
       containers:
         - name: migration
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
